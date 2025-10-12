@@ -11,6 +11,12 @@ class Agent:
         self.health = 100
         self.max_health = 100
         self.alive = True
+        self.stamina = 100
+        self.maxStamina = 100
+        self.honor = 50 #honor starts neutral
+
+    
+    
 
     
     def takeDamage(self,ammount):
