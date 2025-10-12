@@ -44,6 +44,8 @@ class Agent:
         """dev representation."""
         return f"Agent('{self.name}', pos=({self.x},{self.y}), hp={self.health})"
     
+
+   
     
 
 if __name__ == "__main__":
@@ -54,23 +56,23 @@ if __name__ == "__main__":
     print(f"Created: {agent}")
     
    
-    print("\nTaking 30 damage...")
+    print("\nTaking 30 damage")
     agent.takeDamage(30)
     print(f"After damage: {agent}")
     
     
-    print("\nHealing 20...")
+    print("\nHealing 20")
     agent.heal(20)
     print(f"After healing: {agent}")
     
 
-    print("\nTaking 100 damage...")
+    print("\nTaking 100 damage")
     still_alive = agent.takeDamage(100)
     print(f"Still alive? {still_alive}")
     print(f"Final state: {agent}")
     
     
-    print("\nCreating new agent and over-healing...")
+    print("\nCreating new agent and over-healing")
     agent2 = Agent(0, 0, 'B', "Agent2")
     agent2.heal(200)
     print(f"After healing 200: {agent2}")
