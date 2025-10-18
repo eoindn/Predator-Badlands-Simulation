@@ -15,7 +15,7 @@ Completed requirements a) and b) from the brief:
 **Why:** 
 - 20×20 is small (only 400 cells) - memory not a concern
 - O(1) access time for spatial queries
-- Simple to visualize and debug
+- Simple to visualise and debug
 - Easy to display in terminal
 
 **Alternative Considered:** Dictionary with (x,y) tuples as keys (sparse grid)
@@ -40,5 +40,5 @@ Completed requirements a) and b) from the brief:
 **Example:**
 ```python
 # 20x20 grid
-normalize_position(21, 5)  # Returns (1, 5) - wraps right to left
-normalize_position(-1, 10) # Returns (19, 10) - wraps left to right
+normalise_position(21, 5)  # Returns (1, 5) - wraps right to left
+normalise_position(-1, 10) # Returns (19, 10) - wraps left to right
