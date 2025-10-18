@@ -87,12 +87,11 @@ class Predator(Agent):
 if __name__ == "__main__":
     print("Testing Predator class...\n")
     
-    # Create Dek
+
     dek = Predator(10, 10, "Dek", isDek=True)
     print("Created Dek:")
     print(dek)
-    
-    # Test stamina usage
+
     print("\n--- Testing Stamina ---")
     print(f"Using 30 stamina: {dek.useStamina(30)}")
     print(f"Stamina now: {dek.stamina}")
@@ -103,8 +102,7 @@ if __name__ == "__main__":
     print("Resting...")
     dek.rest()
     print(f"Stamina after rest: {dek.stamina}")
-    
-    # Test honour
+
     print("\n--- Testing Honour System ---")
     print(f"Starting honour: {dek.honour} ({dek.get_honour_rank()})")
     
@@ -114,13 +112,13 @@ if __name__ == "__main__":
     dek.lose_honour(50)
     print(f"After losing 50: {dek.honour} ({dek.get_honour_rank()})")
     
-    # Test kills
+    
     print("\n--- Testing Kill Tracking ---")
     dek.record_kill()
     dek.record_kill()
     print(f"Kills: {dek.kills}")
     
-    # Create another predator (not Dek)
+    # creaete another predator (not Dek)
     print("\n--- Creating Clan Member ---")
     father = Predator(15, 15, "Father")
     print(f"Father symbol: '{father.symbol}' (should be 'P', not 'D')")

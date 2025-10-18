@@ -12,14 +12,14 @@ class Agent:
         self.max_health = 100
         self.alive = True
         self.stamina = 100
-        self.maxStamina = 100
+        self.max_stamina = 100
         self.honor = 50 #honor starts neutral
 
     
     
 
     
-    def takeDamage(self,ammount):
+    def take_damage(self,ammount):
         
         self.health -= 1
 
@@ -32,13 +32,13 @@ class Agent:
 
     def heal(self,ammount):
         self.health += ammount
-    def bigHeal(self):
+    def big_heal(self):
         self.health = self.max_health
 
-    def isAlive(self):
+    def is_alive(self):
         return self.isAlive
     
-    def getPos(self):
+    def get_pos(self):
         return (self.x,self.y)
     
     def __str__(self):
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     
    
     print("\nTaking 30 damage")
-    agent.takeDamage(30)
+    agent.take_damage(30)
     print(f"After damage: {agent}")
     
     
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     
 
     print("\nTaking 100 damage")
-    still_alive = agent.takeDamage(100)
+    still_alive = agent.take_damage(100)
     print(f"Still alive? {still_alive}")
     print(f"Final state: {agent}")
     
