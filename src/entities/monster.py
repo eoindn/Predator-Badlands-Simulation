@@ -1,4 +1,4 @@
-from agent import Agent
+from entities.agent import Agent
 
 class Monster(Agent):
 

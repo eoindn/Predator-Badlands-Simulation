@@ -77,6 +77,9 @@ class Grid:
         if 0 <= agent.y < self.height and 0 <= agent.x < self.width:
             self.grid[agent.y][agent.x] = None
 
+    def get_position(self):
+        return (self.x, self.y)
+
     def move_agent(self, agent, new_x, new_y):
         """
         Move an agent to a new position.

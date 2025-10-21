@@ -1,11 +1,11 @@
-from agent import Agent
+from entities.agent import Agent
 
 class Predator(Agent):
     
    
      
 
-    def __init__(self,x,y,name = "Predator", isDek = False):
+    def __init__(self,x,y,name = "Predator", isDek = False,role = 'Warrior'):
         
         symbol = 'D' if isDek else 'P'
         super().__init__(x,y,symbol,name)
@@ -14,11 +14,19 @@ class Predator(Agent):
         self.maxStamina = 100
         self.honour = 50
         self.isDek = isDek
+        self.role = role
+        self.dek_relationship = 0 
+        self.respect_threshhold = 50
 
         #whats he doing and whats he done >:)
         self.kills = 0 
         self.loadCarrying = 0
         self.encumbered = False
+
+
+    def challenge_dek():
+        
+
 
     def useStamina(self,ammount):
 
