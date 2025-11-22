@@ -25,6 +25,7 @@ class Predator(Agent):
 
 
     def challenge_dek():
+        pass
         
 
 
@@ -37,7 +38,6 @@ class Predator(Agent):
             return False
         
     def rest(self, amount=20):
-          
         self.stamina += amount
         if self.stamina > self.maxStamina:
             self.stamina = self.maxStamina
