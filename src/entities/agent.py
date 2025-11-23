@@ -2,7 +2,7 @@ class Agent:
 
     def __init__(self,x,y,symbol,name = "Agent"):
 
-        self.x = y
+        self.x = x
         self.y = y
 
         self.symbol = symbol
@@ -21,7 +21,7 @@ class Agent:
     
     def take_damage(self,ammount):
         
-        self.health -= 1
+        self.health -= ammount
 
         if self.health <= 0:
             self.health = 0
@@ -32,11 +32,13 @@ class Agent:
 
     def heal(self,ammount):
         self.health += ammount
+        if self.health > self.max_health:
+            self.health = self.max_health
     def big_heal(self):
         self.health = self.max_health
 
     def is_alive(self):
-        return self.isAlive
+        return self.alive
     
     def get_pos(self):
         return (self.x,self.y)

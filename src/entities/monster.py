@@ -8,15 +8,15 @@ class Monster(Agent):
         super().__init__(x,y,symbol,name)
 
         self.is_boss = is_boss
-        self.damage = 30 if is_boss else 10
+        self.damage = 100 if is_boss else 10
 
 
         if is_boss:
-            self.health = 350
-            self.max_health = 350
+            self.health = 3500
+            self.max_health = 3500
 
     def attack_damage(self):
-        return self.attack_damage
+        return self.damage
     
     def threat_level(self):
         if self.is_boss:
@@ -24,12 +24,10 @@ class Monster(Agent):
         else:
             return "Monster Encountered!"
 
-
-
-def __str__(self):
-        
+    def __str__(self):
+        """String representation of monster."""
         base = super().__str__()
-        return f"{base}\n  Threat: {self.get_threat_level()} | Damage: {self.damage}"
+        return f"{base}\n  Threat: {self.threat_level()} | Damage: {self.damage}"
 
 
 

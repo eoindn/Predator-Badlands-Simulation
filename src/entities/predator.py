@@ -11,6 +11,7 @@ class Predator(Agent):
         super().__init__(x,y,symbol,name)
 
         self.stamina = 100
+        self.challenge_cooldown = 0 
         self.maxStamina = 100
         self.honour = 50
         self.isDek = isDek
@@ -24,15 +25,43 @@ class Predator(Agent):
         self.encumbered = False
 
 
-    def challenge_dek():
-        pass
+    def challenge_dek(self, dek, grid):
+        """Clan member challenges Dek based on honour and relationship."""
+
+        if self.challenge_cooldown > 0:
+            self.challenge_cooldown -= 1
+            return False
+
+        distance = abs(self.x - dek.x) + abs(self.y - dek.y)
+        if distance > 2:
+            return False
+
+        if self.name == "Father":
+            if dek.honour < 60:
+                print(f"  ⚔️  {self.name}: 'You bring shame to our clan, {dek.name}!'")
+                dek.lose_honour(5)
+                self.challenge_cooldown = 10
+                return True
+
+        elif self.name == "Brother":
+            if dek.kills > self.kills + 1:
+                print(f"  ⚔️  {self.name}: 'Stop showing off, {dek.name}!'")
+                dek.lose_honour(3)
+                self.challenge_cooldown = 10
+                return True
+
+        return False
+
+
+        
+        
         
 
 
     def useStamina(self,ammount):
 
         if self.stamina >= ammount:
-            self.stamina += ammount
+            self.stamina -= ammount
             return True
         else:
             return False
