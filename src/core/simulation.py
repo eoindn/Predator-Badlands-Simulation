@@ -245,6 +245,25 @@ class Simulation:
         if not attacker.alive or not defender.alive:
             return
         
+        if isinstance(attacker, Predator):
+            is_worthy , reason = attacker.is_worthy_target(defender)
+
+            if reason == "Target unworthy: Synthetic entity":
+                print(f"  ⚠️  {attacker.name} attacks {defender.name} (DISHONORABLE).")
+                attacker.lose_honour(5)
+                return
+            if reason == "Pick on someone your own size loser":
+                print(f"  ⚠️  {attacker.name} attacks {defender.name} ! (DISHONORABLE).")
+                attacker.lose_honour(10)
+                return
+        
+        self.stats['combasts'] += 1
+
+        
+                
+            
+        
+        
         self.stats['combats'] += 1
         
         # Calculate damage
@@ -421,6 +440,9 @@ class Simulation:
                 
                 if results['boss']:
                     print(f"  ⚠️  BOSS DETECTED: {results['boss']['name']} at {results['boss']['position']}!")
+
+                if results is None:
+                    print("  THIA YOU USELESS PEICE OF SHIT WERE ALL GONNA DIE")
                 
                 break
 

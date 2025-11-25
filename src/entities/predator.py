@@ -25,6 +25,10 @@ class Predator(Agent):
         self.encumbered = False
 
 
+
+    
+
+
     def challenge_dek(self, dek, grid):
         """Clan member challenges Dek based on honour and relationship."""
 
@@ -118,6 +122,53 @@ class Predator(Agent):
                 f"  Stamina: {self.stamina}/{self.maxStamina} | "
                 f"Honour: {self.honour} ({self.get_honour_rank()}) | "
                 f"Kills: {self.kills}")
+    
+
+    def is_worthy(self, target):
+
+        if isinstance(target,Syntehtic):
+            return False, "Target unworthy: Synthetic entity."
+        
+        if hasattr(target,"health") and hasattr(target,"max_health"):
+            health_ratio = target.health / target.max_health
+            if health_ratio < 0.3:
+                return False, "Pick on someone your own size loser"
+            
+        if isinstance(target, Monster) and target.is_boss:
+            return True, "Target unworthy: Boss monster." 
+        
+        if hasattr(target, 'health') and hasattr(target, 'max_health'):
+            if target.health == target.max_health:
+                return True, "prey_healthy"
+
+        # Default: worthy enough
+        return True, "standard_prey"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Test the Predator class
