@@ -19,6 +19,7 @@ from entities.agent import Agent
 from entities.predator import Predator
 from entities.monster import Monster
 from entities.synthetics import Synthetic
+from entities.trap import Trap
 
 # Import systems
 from systems.movement import MovementSystem
@@ -105,6 +106,13 @@ class Simulation:
             self.agents.append(predator)
             self.all_agents.append(predator)
             print(f"Spawned {predator.nane} at ({x} {y})")
+
+        
+        for i in range(1, random.randint(1,4)):
+            x,y = self._find_empty_position()
+            trap = Trap(x,y,symbol="T",name=f"Trap{i}")
+            self.grid.place_agent(trap,x,y)
+            print(f"  Spawned Trap{i} at ({x}, {y})")
             
 
         
@@ -246,7 +254,7 @@ class Simulation:
             return
         
         if isinstance(attacker, Predator):
-            is_worthy , reason = attacker.is_worthy_target(defender)
+            is_worthy , reason = attacker.is_worthy(defender)
 
             if reason == "Target unworthy: Synthetic entity":
                 print(f"  ⚠️  {attacker.name} attacks {defender.name} (DISHONORABLE).")

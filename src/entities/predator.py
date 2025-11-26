@@ -1,4 +1,5 @@
 from entities.agent import Agent
+from entities.synthetics import Synthetic
 
 class Predator(Agent):
     
@@ -126,7 +127,7 @@ class Predator(Agent):
 
     def is_worthy(self, target):
 
-        if isinstance(target,Syntehtic):
+        if isinstance(target,Synthetic):
             return False, "Target unworthy: Synthetic entity."
         
         if hasattr(target,"health") and hasattr(target,"max_health"):
@@ -135,7 +136,7 @@ class Predator(Agent):
                 return False, "Pick on someone your own size loser"
             
         if isinstance(target, Monster) and target.is_boss:
-            return True, "Target unworthy: Boss monster." 
+            return True, "Target worthy: Boss monster." 
         
         if hasattr(target, 'health') and hasattr(target, 'max_health'):
             if target.health == target.max_health:
