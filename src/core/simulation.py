@@ -73,48 +73,27 @@ class Simulation:
         """Spawn all entities at random positions."""
         print("Spawning entities...")
         
-        # gonna spawndek first
-        x,y = self._find_empty_position()
-        Dek = Predator(x,y,name="Dek",isDek = True)
-        self.grid.place_agent(Dek,x,y)
-        self.predators.append(Dek)
-        self.all_agents.append(Dek)
-        print(f"Dek spawned at ({x} {y})")
-
-        #the dad
-        x,y = self._find_empty_position()
-        father = Predator(x,y ,name = "Father",isDek = False)
-        self.grid.place_agent(father,x,y)
-        self.predators.append(father)
-        self.all_agents.append(father)
-        print(f"Father spawend at ({x} {y})")
-
-        # the brother
-        x, y = self._find_empty_position()  # NEW position!
-        brother = Predator(x, y, name="Brother", isDek=False)
-        self.grid.place_agent(brother, x, y)
-        self.predators.append(brother)
-        self.all_agents.append(brother)
-        print(f"  Spawned Brother at ({x}, {y})")
-
-
-        for i in range(3, num_predators):
-            x,y = self._find_empty_position()
-                
-            predator = Predator(x, y, name=f"Predator{i+1}", isDek=False)
-            self.grid.place_agent(predator,x,y)
-            self.agents.append(predator)
+        # Predators (including  Dek)
+        for i in range(num_predators):
+            x, y = self._find_empty_position()
+            is_dek = (i == 0)  # First predator is Dek
+            name = "Dek" if is_dek else f"Predator{i+1}"
+            predator = Predator(x, y, name=name, isDek=is_dek)
+            brother = Predator(x,y, name = "Brother", isDek = is_dek)
+            self.grid.place_agent(predator, x, y)
+            self.grid.place_agent(brother,x,y)
+            self.predators.append(predator)
+            self.predators.append(brother)
             self.all_agents.append(predator)
-            print(f"Spawned {predator.nane} at ({x} {y})")
+            print(f"  Spawned {name} at ({x}, {y})")
 
-        
-        for i in range(1, random.randint(1,4)):
+        # Spawn traps:
+        num_traps = random.randint(1,3)
+        for i in range(num_traps):
             x,y = self._find_empty_position()
-            trap = Trap(x,y,symbol="T",name=f"Trap{i}")
+            trap = Trap(x,y,symbol="T", name=f"Trap {i+1}")
             self.grid.place_agent(trap,x,y)
-            print(f"  Spawned Trap{i} at ({x}, {y})")
-            
-
+            print(f"Spawned {trap.name} at {x} {y}")
         
         #pawn Monster(one boss)
         for i in range(num_monsters):
@@ -252,25 +231,6 @@ class Simulation:
         """Resolve combat between two agents."""
         if not attacker.alive or not defender.alive:
             return
-        
-        if isinstance(attacker, Predator):
-            is_worthy , reason = attacker.is_worthy(defender)
-
-            if reason == "Target unworthy: Synthetic entity":
-                print(f"  ⚠️  {attacker.name} attacks {defender.name} (DISHONORABLE).")
-                attacker.lose_honour(5)
-                return
-            if reason == "Pick on someone your own size loser":
-                print(f"  ⚠️  {attacker.name} attacks {defender.name} ! (DISHONORABLE).")
-                attacker.lose_honour(10)
-                return
-        
-        self.stats['combasts'] += 1
-
-        
-                
-            
-        
         
         self.stats['combats'] += 1
         
@@ -448,9 +408,6 @@ class Simulation:
                 
                 if results['boss']:
                     print(f"  ⚠️  BOSS DETECTED: {results['boss']['name']} at {results['boss']['position']}!")
-
-                if results is None:
-                    print("  THIA YOU USELESS PEICE OF SHIT WERE ALL GONNA DIE")
                 
                 break
 
