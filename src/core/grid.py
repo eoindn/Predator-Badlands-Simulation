@@ -18,6 +18,7 @@ class Grid:
         self.height = height
         # 2D list - each cell is None (empty) to start
         self.grid = [[None for _ in range(width)] for _ in range(height)]
+        
     
     def normalize_position(self, x, y):
         """
@@ -79,6 +80,28 @@ class Grid:
 
     def get_position(self):
         return (self.x, self.y)
+
+
+    def weather_system(self):
+        weather = {
+                1:"hot",
+                2:"cold",
+                3:"rainy",
+                4:"thunder_storm"}
+
+        
+        keys = list(weather.keys())
+
+        random_key = random.choice(keys)
+
+        random_weather_value = weather[random_key]
+
+        return random_weather_value
+            
+
+    
+
+    
 
     def move_agent(self, agent, new_x, new_y):
         """

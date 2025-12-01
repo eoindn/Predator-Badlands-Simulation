@@ -22,7 +22,7 @@ class Predator(Agent):
         self.kills = 0 
         self.loadCarrying = 0
         self.encumbered = False
-
+    
 
     def challenge_dek(self, dek, grid):
         dek_position = abs(self.x - dek.x) + abs(self.y - dek.y)
@@ -101,7 +101,7 @@ class Predator(Agent):
         elif self.honour >= 20:
             return "Dishonoured"
         else:
-            return "Disgraced"
+            return "Disgraced Exiled"
         
     def __str__(self):
         """Detailed string representation."""
@@ -110,6 +110,51 @@ class Predator(Agent):
                 f"  Stamina: {self.stamina}/{self.maxStamina} | "
                 f"Honour: {self.honour} ({self.get_honour_rank()}) | "
                 f"Kills: {self.kills}")
+    
+
+
+    def clan_dialogue(self, dek):
+    #s imple dialogue based on honour for noe
+        status = self.get_clan_status(dek)
+        
+        if self.clan_role == "father":
+            messages = {
+                "EXILE": "You are no son of mine leave or be slain where you stand!",
+                "DISAPPROVED": "Prove yourself you loser runt.",
+                "NEUTRAL": "Show me your strength pad thai.",
+                "ACCEPTED": "You have earned respect young warrior."
+            }
+        else:  # brother or other pred
+            messages = {
+                "EXILE": "LEAVE NOW! You bring shame to us all!",
+                "DISAPPROVED": "Still a dumb loser , I see.",
+                "NEUTRAL": "Perhaps you're not a dumb loser.",
+                "ACCEPTED": "You fight well brah."
+            }
+        
+        return f"{self.name}: {messages[status]}"
+    
+
+    def get_thias_help(self,thia,grid):
+        
+        print(f"{self.name} uses Thia's scan to assess the area.")
+
+        scan_results = thia.scan_area(grid, scan_range=5)
+
+        if scan_results['boss']:
+            boss = scan_results['boss']
+            print(f"{thia.name}: 'WARNING - Ultimate Adversary detected {boss['distance']} cells away!'")
+    
+        if len(scan_results['monsters']) > 0:
+            closest_monster = min(scan_results['monsters'], key=lambda m: m['distance'])
+            print(f"{thia.name}: 'Closest threat: {closest_monster['name']} at distance {closest_monster['distance']}'")
+        else:
+            print(f"{thia.name}: 'Area is clear of threats.'")
+        
+        return scan_results
+        
+        # utilise thias scan to help dek find prey or avoid danger
+
 
 
 # Test the Predator class
