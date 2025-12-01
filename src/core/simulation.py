@@ -70,35 +70,54 @@ class Simulation:
         self._spawn_entities(num_predators, num_monsters, num_synthetics)
     
     def _spawn_entities(self, num_predators, num_monsters, num_synthetics):
-        """Spawn all entities at random positions."""
+        
         print("Spawning entities...")
         
-        # Predators (including  Dek)
-        for i in range(num_predators):
-            x, y = self._find_empty_position()
-            is_dek = (i == 0)  # First predator is Dek
-            name = "Dek" if is_dek else f"Predator{i+1}"
-            predator = Predator(x, y, name=name, isDek=is_dek)
-            brother = Predator(x,y, name = "Brother", isDek = is_dek)
-            self.grid.place_agent(predator, x, y)
-            self.grid.place_agent(brother,x,y)
-            self.predators.append(predator)
-            self.predators.append(brother)
-            self.all_agents.append(predator)
-            print(f"  Spawned {name} at ({x}, {y})")
-
-        # Spawn traps:
-        num_traps = random.randint(1,3)
-        for i in range(num_traps):
-            x,y = self._find_empty_position()
-            trap = Trap(x,y,symbol="T", name=f"Trap {i+1}")
-            self.grid.place_agent(trap,x,y)
-            print(f"Spawned {trap.name} at {x} {y}")
         
-        #pawn Monster(one boss)
+        x, y = self._find_empty_position()
+        dek = Predator(x, y, name="Dek", isDek=True)
+        self.grid.place_agent(dek, x, y)
+        self.predators.append(dek)
+        self.all_agents.append(dek)
+        print(f"  Spawned Dek at ({x}, {y})")
+        
+      
+        x, y = self._find_empty_position()
+        brother = Predator(x, y, name="Brother", isDek=False)
+        self.grid.place_agent(brother, x, y)
+        self.predators.append(brother)
+        self.all_agents.append(brother)
+        print(f"  Spawned Brother at ({x}, {y})")
+        
+        
+        x, y = self._find_empty_position()
+        father = Predator(x, y, name="Father", isDek=False)
+        self.grid.place_agent(father, x, y)
+        self.predators.append(father)
+        self.all_agents.append(father)
+        print(f"  Spawned Father at ({x}, {y})")
+        
+       
+        for i in range(max(0, num_predators - 3)):
+            x, y = self._find_empty_position()
+            predator = Predator(x, y, name=f"Predator{i+1}", isDek=False)
+            self.grid.place_agent(predator, x, y)
+            self.predators.append(predator)
+            self.all_agents.append(predator)
+            print(f"  Spawned Predator{i+1} at ({x}, {y})")
+
+        
+        num_traps = random.randint(1, 3)
+        for i in range(num_traps):
+            x, y = self._find_empty_position()
+            trap = Trap(x, y, symbol="!", name=f"Trap {i+1}")
+            self.grid.place_agent(trap, x, y)
+            print(f"  Spawned {trap.name} at ({x}, {y})")
+        
+    
         for i in range(num_monsters):
             x, y = self._find_empty_position()
-            is_boss = (i == 0)  # First monster is boss
+            is_boss = (i == 0)
             name = "Ultimate Adversary" if is_boss else f"Monster{i+1}"
             monster = Monster(x, y, name=name, is_boss=is_boss)
             self.grid.place_agent(monster, x, y)
@@ -106,19 +125,16 @@ class Simulation:
             self.all_agents.append(monster)
             print(f"  Spawned {name} at ({x}, {y})")
         
-        #Spawn Synthetic (Thia)
-        for i in range(num_synthetics):
-            x, y = self._find_empty_position()
-            is_thia = (i == 0)  # First synthetic is Thia
-            name = "Thia" if is_thia else f"Synthetic{i+1}"
-            synthetic = Synthetic(x, y, name=name, isThia=is_thia)
-            self.grid.place_agent(synthetic, x, y)
-            self.synthetics.append(synthetic)
-            self.all_agents.append(synthetic)
-            print(f"  Spawned {name} at ({x}, {y})")
+        
+        x, y = self._find_empty_position()
+        thia = Synthetic(x, y, name="Thia", isThia=True)
+        self.grid.place_agent(thia, x, y)
+        self.synthetics.append(thia)
+        self.all_agents.append(thia)
+        print(f"  Spawned Thia at ({x}, {y})")
         
         print(f"\nTotal entities spawned: {len(self.all_agents)}")
-    
+        
     def _find_empty_position(self):
         """Find a random empty position on the grid."""
         attempts = 0
@@ -434,4 +450,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -1,7 +1,13 @@
-class Trap:
+from entities.agent import Agent
+
+
+class Trap(Agent):
 
     def __init__(self,x,y,symbol,name = "Trap"):
 
+        super().__init__(x,y,symbol,name)
+
+        self.is_triggered = False
         self.x = x
         self.y = y
         self.symbol = symbol
