@@ -7,21 +7,12 @@ import random
 import sys
 import os
 from typing import List, Dict, Optional
-
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
-# Import core components
 from core.grid import Grid
-
-# Import entities
 from entities.agent import Agent
 from entities.predator import Predator
 from entities.monster import Monster
 from entities.synthetics import Synthetic
 from entities.trap import Trap
-
-# Import systems
 from systems.movement import MovementSystem
 
 
