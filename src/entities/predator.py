@@ -1,5 +1,6 @@
 from entities.agent import Agent
 
+
 class Predator(Agent):
     
    
@@ -17,6 +18,7 @@ class Predator(Agent):
         self.role = role
         self.dek_relationship = 0 
         self.respect_threshhold = 50
+        self.trophies = []
 
         #whats he doing and whats he done >:)
         self.kills = 0 
@@ -27,24 +29,48 @@ class Predator(Agent):
     def challenge_dek(self, dek, grid):
         dek_position = abs(self.x - dek.x) + abs(self.y - dek.y)
 
-        if dek_position < 2:
+        status = self.get_clan_status(dek)
+
+        if dek_position > 2:
             return False
+        
+
 
         if self.name == "Father":
-            if self.honor < 40:
-                print(f" {self.name}: You disohonor the clan {dek.name}! Prove yourself worthy")
+            if status == "EXILE":
+                print(f"\n⚔️  {self.name}: 'You dishonour the cla{dek.name}! Prove yourself or die little man!'")
+                self.dek_relationship -= 10
+                return True
+            elif status == "DISAPPROVED":
+                print(f"\n  {self.name}: 'You have {dek.kills} kills and {dek.honour} honour LOCK IN AND PROVE YOUR WORTH!'")
                 self.dek_relationship -= 5
                 return True
+            elif status == "ACCEPTED":
+                print(f"\n✓ {self.name}: 'Well done {dek.name}. You have proven yourself, good job son.'")
+                self.dek_relationship += 5
+                return True
         
+        #brother challengeds dek
         elif self.name == "Brother":
             if dek.kills > self.kills + 2:
-                print(f"\n  {self.name}: 'Your success makes you arrogant, Dek!'")
+                print(f"\n  {self.name}: 'Your {dek.kills} kills make you arrogant, Dek! I only have {self.kills}!  :( )'")
                 self.dek_relationship -= 5
+                return True
+            elif status == "ACCEPTED" and dek.honour > self.honour:
+                print(f"\n  {self.name}: 'You may have {dek.honour} honour but I am still superior! HAHAHA!'")
+                self.dek_relationship -= 3
+                return True
+            elif status == "DISAPPROVED":
+                print(f"\n  {self.name}: 'Still weak scared little man brother.'")
                 return True
         
         return False
+            
+
+
         
 
+        
         
         
         
@@ -103,6 +129,31 @@ class Predator(Agent):
         else:
             return "Disgraced Exiled"
         
+    def get_clan_status(self, dek):
+         
+        if dek.honour < 20:
+            return "EXILE"
+        elif dek.honour < 40:
+            return "DISAPPROVED"
+        
+        # feather has strict expectations
+        if self.name == "Father":
+            if dek.kills < 2:  
+                return "DISAPPROVED"
+            elif dek.honour >= 60 and dek.kills >= 3:
+                return "ACCEPTED"
+        
+        
+        if self.name == "Brother":
+            if dek.honour > self.honour:
+                return "DISAPPROVED"  #jealous
+        
+     
+        if dek.honour >= 60:
+            return "ACCEPTED"
+        else:
+            return "NEUTRAL"
+            
     def __str__(self):
         """Detailed string representation."""
         base = super().__str__()
@@ -114,26 +165,33 @@ class Predator(Agent):
 
 
     def clan_dialogue(self, dek):
-    #s imple dialogue based on honour for noe
+        """improved dialogue"""
         status = self.get_clan_status(dek)
         
-        if self.clan_role == "father":
+        if self.name == "Father":
             messages = {
-                "EXILE": "You are no son of mine leave or be slain where you stand!",
-                "DISAPPROVED": "Prove yourself you loser runt.",
-                "NEUTRAL": "Show me your strength pad thai.",
-                "ACCEPTED": "You have earned respect young warrior."
+                "EXILE": "You are no son of mine. Leave or be slain where you stand!",
+                "DISAPPROVED": "Prove yourself loser. You bring shame to our bloodline.",
+                "NEUTRAL": f"You must show me your strength Dek. You have {dek.kills} kills and {dek.honour} honour.",
+                "ACCEPTED": "You have earned respect g. The clan sees your worth."
             }
-        else:  # brother or other pred
+        elif self.name == "Brother":
             messages = {
-                "EXILE": "LEAVE NOW! You bring shame to us all!",
-                "DISAPPROVED": "Still a dumb loser , I see.",
-                "NEUTRAL": "Perhaps you're not a dumb loser.",
-                "ACCEPTED": "You fight well brah."
+                "EXILE": "LEAVE NOW! You bring great shame to us all",
+                "DISAPPROVED": f"Still a little scared loser . I have {self.kills} kills to your {dek.kills}.",
+                "NEUTRAL": "Perhaps you're not completely worthless bro.",
+                "ACCEPTED": f"You fight well Dek. But I still have more honour ({self.honour} vs {dek.honour}) we can play some valorant later."
+            }
+        else:  # others
+            messages = {
+                "EXILE": f"{dek.name} is exiled. Do not speak to this loser man",
+                "DISAPPROVED": f"The loser {dek.name} must prove himself.",
+                "NEUTRAL": f"{dek.name} hunts with some skill. Hes still bronze in valorant though.",
+                "ACCEPTED": f"{dek.name} has proven his worth to the clan."
             }
         
-        return f"{self.name}: {messages[status]}"
-    
+        return f"{self.name}: '{messages[status]}'"
+
 
     def get_thias_help(self,thia,grid):
         
@@ -154,6 +212,8 @@ class Predator(Agent):
         return scan_results
         
         # utilise thias scan to help dek find prey or avoid danger
+
+    
 
 
 

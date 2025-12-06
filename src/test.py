@@ -39,3 +39,28 @@ results = thia.scan_area(grid, scan_range=3)
 print(f"Monsters: {results['monsters']}")
 print(f"Predators: {results['predators']}")
 print(f"Synthetics: {results['synthetics']}")
+
+
+
+
+print("Clan Dialogue System Test")
+
+#dek with low honour
+dek_low = Predator(5, 5, "Dek", isDek=True)
+dek_low.honour = 25
+dek_low.kills = 0
+
+father = Predator(6, 6, "Father", isDek=False)
+brother = Predator(7, 7, "Brother", isDek=False)
+
+print(father.clan_dialogue(dek_low))
+print(brother.clan_dialogue(dek_low))
+
+#give Dek high honour
+dek_high = Predator(10, 10, "Dek", isDek=True)
+dek_high.honour = 75
+dek_high.kills = 5
+
+print(f"after Dek proves himself")
+print(father.clan_dialogue(dek_high))
+print(brother.clan_dialogue(dek_high))

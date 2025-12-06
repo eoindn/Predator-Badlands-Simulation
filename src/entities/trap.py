@@ -12,13 +12,14 @@ class Trap(Agent):
         self.y = y
         self.symbol = symbol
         self.name = name
+        
 
     def get_pos(self):
         return (self.x,self.y)
     
 
 
-    def damage():
+    def damage(self):
         return 20
     
 

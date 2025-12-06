@@ -3,37 +3,30 @@ Predator: Badlands Simulation
 Main simulation engine that orchestrates the multi-agent system.
 """
 
-import random
+
 import sys
 import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import random
+
 from typing import List, Dict, Optional
-from core.grid import Grid
+from grid import Grid
 from entities.agent import Agent
 from entities.predator import Predator
 from entities.monster import Monster
 from entities.synthetics import Synthetic
-from entities.trap import Trap
 from systems.movement import MovementSystem
+from entities.trap import Trap
+from systems.ClanCode import ClanCode
 
 
 class Simulation:
-    """
-    This simulation class that manages the game world and entities so i can test the game and its functionality.
     
-   
-    """
     
     def __init__(self, width=20, height=20, num_predators=3, num_monsters=5, num_synthetics=2):
-        """
-        
-        
-        Args:
-            width: Grid width (default 20)
-            height: Grid height (default 20)
-            num_predators: Number of Predator agents to spawn
-            num_monsters: Number of Monster agents to spawn
-            num_synthetics: Number of Synthetic agents to spawn
-        """
+      
         self.grid = Grid(width, height)
         self.width = width
         self.height = height
@@ -42,7 +35,9 @@ class Simulation:
         self.predators: List[Predator] = []
         self.monsters: List[Monster] = []
         self.synthetics: List[Synthetic] = []
+        self.traps: List[Trap] = []
         self.all_agents: List[Agent] = []
+        self.current_weather = "Clear"
         
         # Simulation state
         self.turn = 0
@@ -98,12 +93,15 @@ class Simulation:
             print(f"  Spawned Predator{i+1} at ({x}, {y})")
 
         
-        num_traps = random.randint(1, 3)
+        # new spawn traps functionality
+        num_traps = random.randint(3, 5)  # More traps
         for i in range(num_traps):
             x, y = self._find_empty_position()
-            trap = Trap(x, y, symbol="!", name=f"Trap {i+1}")
-            self.grid.place_agent(trap, x, y)
-            print(f"  Spawned {trap.name} at ({x}, {y})")
+            trap = Trap(x, y, symbol="!", name=f"Trap_{i+1}")
+            #not goin to palce on the grid as its hidden
+            self.traps.append(trap)  
+            print(f"  Spawned {trap.name} at ({x}, {y}) [HIDDEN]")
+
         
     
         for i in range(num_monsters):
@@ -127,7 +125,7 @@ class Simulation:
         print(f"\nTotal entities spawned: {len(self.all_agents)}")
         
     def _find_empty_position(self):
-        """Find a random empty position on the grid."""
+
         attempts = 0
         while attempts < 100:
             x = random.randint(0, self.width - 1)
@@ -143,7 +141,7 @@ class Simulation:
         raise Exception("Grid is full!")
     
     def _move_agent_smart(self, agent: Agent):
-        """Move an agent intelligently toward a target, or randomly if no target."""
+        
         if not agent.alive:
             return False
         
@@ -235,45 +233,63 @@ class Simulation:
                         self._resolve_combat(agent, target)
     
     def _resolve_combat(self, attacker: Agent, defender: Agent):
-        """Resolve combat between two agents."""
+
+
         if not attacker.alive or not defender.alive:
             return
         
+        # if attacker is a Predator
+        if isinstance(attacker, Predator):
+            #check attack 
+            if not ClanCode.should_allow_action(attacker, defender, "attack"):
+                honor_change, msg = ClanCode.calculate_honor_change(attacker, defender, "attack")
+                if honor_change != 0:
+                    attacker.gain_honour(honor_change) if honor_change > 0 else attacker.lose_honour(abs(honor_change))
+                if msg:
+                    print(msg)
+                return  
+        
         self.stats['combats'] += 1
         
-        # Calculate damage
+        
         if isinstance(attacker, Monster):
             damage = attacker.damage
         elif isinstance(attacker, Predator):
-            damage = random.randint(20, 40)  # Predator damage
+            damage = random.randint(20, 40)
         else:
-            damage = random.randint(10, 20)  # Synthetic damage
+            damage = random.randint(10, 20)
         
-        # Apply damage
+        # apply damage
         still_alive = defender.take_damage(damage)
-        
         print(f"  ⚔️  {attacker.name} attacks {defender.name} for {damage} damage!")
         
         if not still_alive:
             self.stats['deaths'] += 1
             print(f"  💀 {defender.name} has been defeated!")
             
-            # Remove from grid
+      
             self.grid.remove_agent(defender)
             
-            # Track kills
+            
             if isinstance(attacker, Predator):
                 attacker.record_kill()
-                attacker.gain_honour(10)
+                
+                
+                honor_change, msg = ClanCode.calculate_honor_change(attacker, defender, "kill")
+                if honor_change > 0:
+                    attacker.gain_honour(honor_change)
+                else:
+                    attacker.lose_honour(abs(honor_change))
+                
+                if msg:
+                    print(msg)
+                
                 self.stats['kills'] += 1
             
-            # Remove from active lists
-            if isinstance(defender, Predator) and defender in self.predators:
-                self.predators.remove(defender)
-            elif isinstance(defender, Monster) and defender in self.monsters:
-                self.monsters.remove(defender)
-            elif isinstance(defender, Synthetic) and defender in self.synthetics:
-                self.synthetics.remove(defender)
+            # emove from lists...
+            
+
+
     
     def _update_agents(self):
         """Update all agents (movement, combat, etc.)."""
@@ -285,8 +301,11 @@ class Simulation:
                 continue
             
             # Move agent
-            if random.random() < 0.7:  # 70% chance to move
-                self._move_agent_smart(agent)
+            if random.random() < 0.7: 
+                moved = self._move_agent_smart(agent)
+                if moved:  
+                    self._check_traps(agent)
+                
             
             # Check for combat
             self._check_combat(agent)
@@ -303,6 +322,69 @@ class Simulation:
             if isinstance(agent, Predator):
                 if agent.stamina < agent.maxStamina:
                     agent.rest(5)  # Regenerate stamina
+
+
+        def _apply_weather_effects(self):
+            
+            #pdate weather every 10 turns
+            if self.turn % 10 == 0:
+                self.current_weather = self.grid.weather_system()
+                print(f"\n Weather changed: {self.current_weather}")
+            
+            #effects everyone
+            if self.current_weather == "hot":
+                for pred in self.predators:
+                    if pred.alive:
+                        pred.useStamina(2) 
+            elif self.current_weather == "thunder_storm":
+                # eandom damage chance due to reduced visibility
+                for agent in self.all_agents:
+                    if agent.alive and random.random() < 0.1:
+                        agent.take_damage(5)
+
+
+
+    def _check_traps(self, agent):
+        """Check if agent stepped on a trap and trigger it."""
+        if not agent.alive:
+            return
+        
+      
+        for trap in self.traps[:]: 
+            if trap.x == agent.x and trap.y == agent.y and not trap.is_triggered:
+                print(f"  💥 {agent.name} stepped on {trap.name}!")
+                
+                damage = trap.damage()
+                still_alive = agent.take_damage(damage)
+                trap.is_triggered = True
+
+
+
+
+                
+                print(f"     Trap deals {damage} damage! {agent.name} HP: {agent.health}/{agent.max_health}")
+                
+                # preds loose honor for triggering traps
+                if isinstance(agent, Predator):
+                    agent.lose_honour(5)
+                    print(f"     {agent.name} loses 5 honour for carelessness!")
+                
+                if not still_alive:
+                    print(f"  ☠️  {agent.name} was killed by the trap!")
+                    self._remove_dead_agent(agent)
+                
+                break  
+    def _remove_dead_agent(self, agent):
+        # helper method to remove dead agents from simulation
+        self.grid.remove_agent(agent)
+        
+        if isinstance(agent, Predator) and agent in self.predators:
+            self.predators.remove(agent)
+        elif isinstance(agent, Monster) and agent in self.monsters:
+            self.monsters.remove(agent)
+        elif isinstance(agent, Synthetic) and agent in self.synthetics:
+            self.synthetics.remove(agent)
+
     
     def _check_win_conditions(self):
         """Check if simulation should end."""
@@ -321,13 +403,7 @@ class Simulation:
         return False
     
     def run(self, display_every=5, max_turns=100):
-        """
-        Run the simulation.
-        
-        Args:
-            display_every: Display grid every N turns (0 to disable)
-            max_turns: Maximum number of turns to run
-        """
+       
         print("\n" + "="*50)
         print("PREDATOR: BADLANDS SIMULATION")
         print("="*50)
@@ -380,6 +456,7 @@ class Simulation:
         print(f"  Turn: {self.turn}")
         print(f"  Alive - Predators: {alive_predators}, Monsters: {alive_monsters}, Synthetics: {alive_synthetics}")
         print(f"  Combats: {self.stats['combats']}, Kills: {self.stats['kills']}, Deaths: {self.stats['deaths']}")
+        print(f"  Traps: {len([t for t in self.traps if not t.is_triggered])}  /  {len(self.traps)} active")
         
         # Show predator honor
         if self.predators:
@@ -420,7 +497,7 @@ class Simulation:
 
 
 def main():
-    """Main entry point for the simulation."""
+    
     # Create simulation
     sim = Simulation(
         width=20,
@@ -436,7 +513,7 @@ def main():
     # Run simulation
     sim.run(display_every=10, max_turns=50)
     
-    print("\n✅ Simulation complete!")
+    print("\nSimulation complete!")
 
 
 if __name__ == "__main__":
