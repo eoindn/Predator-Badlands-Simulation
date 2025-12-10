@@ -19,7 +19,7 @@ class ClanCode:
     def is_worthy_prey(predator: Predator, target: Agent) -> tuple[bool, str]:
         #Do not harm the unworthy as synthetics are not living prey
         if isinstance(target, Synthetic):
-            return False, "not_living"
+            return False, "not_alive"
         
         # Rule no 2 do not harm the sick and injured
         if hasattr(target, 'health') and hasattr(target, 'max_health'):
@@ -58,14 +58,14 @@ class ClanCode:
             
             if reason == "wounded_prey":
                 return ClanCode.HONOR_WOUNDED_ATTACK, f"{predator.name} dishonorably killed wounded prey!"
-            elif reason == "not_living":
+            elif reason == "not_alive":
                 return ClanCode.HONOR_SYNTHETIC_ATTACK, f"{predator.name} attacked non-living prey!"
         
         elif action == "attack":
           
             is_worthy, reason = ClanCode.is_worthy_prey(predator, target)
             if not is_worthy:
-                if reason == "not_living":
+                if reason == "not_alive":
                     return ClanCode.HONOR_SYNTHETIC_ATTACK, f" {predator.name} attacks nonliving prey  dishonorable!"
                 elif reason == "wounded_prey":
                     return ClanCode.HONOR_WOUNDED_ATTACK, f"{predator.name} attacks wounded prey  shameful!"
@@ -82,7 +82,7 @@ class ClanCode:
             is_worthy, reason = ClanCode.is_worthy_prey(predator, target)
             
         
-            if reason == "not_living" and predator.isDek:
+            if reason == "not_alive" and predator.isDek:
                 #dek hqs to follow the code more strictly
                 print(f" {predator.name} refuses to attack {target.name}  not worthy prey!")
                 return False

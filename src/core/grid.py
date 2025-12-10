@@ -1,3 +1,5 @@
+import random
+
 class Grid:
     """
     2D grid environment representing planet Kalisk.

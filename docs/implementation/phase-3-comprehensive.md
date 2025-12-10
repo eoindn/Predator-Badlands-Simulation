@@ -19,6 +19,7 @@ Completed:
 - Social Clan mechanics 
 - Honor system 
 - Weather System 
+- Trap Mechanics
 
 
 ## Requirements Completion Summary
@@ -168,6 +169,33 @@ Each Predator has a killd attribute which i sincremented on a successful kill
 - Can be used for achievement systems or AI decisions
 - Provides metric for agent performance evaluation
 
+
+
+**Better Trap Functionality**
+- Traps are no hidden in the grid since this is more fitting for the idea of a trap
+- Agents will now loose honor for triggering traps
+
+
+**Improved Predator Class**
+- More detailed and comprehensive dialogue
+- More detailed challenge dek method that using the get clan status method and relies more on just kills for  brothers relationship
+
+
+
+**Improved Clan Code with new Clan Code class for better OOP practice**
+- Checks for the agent type and determines if the prey is worthy or not
+- Checks for the action done upon the prey such as: fleeing, killing or attacking
+- Penalises agent via honor reduction based the action committed
+- Dek follows the code more strictly
+
+
+**Added Weather System to Simulation**
+- Simulation now uses the weather system
+- Suitable effects added to predator depending the weather
+- Needs to be refined slightly 
+
+
+
 **Code Location:** `src/core/simulation.py` - `_check_combat()`, `_resolve_combat()`
 
 ---
@@ -180,8 +208,8 @@ Each Predator has a killd attribute which i sincremented on a successful kill
 - ✅ b) Predator Agents with pathfinding
 - ✅ c) Synthetic Androids (Thia with scanning)
 - ✅ d) Monster Threat (boss with 500 HP)
-- ✅ e) Clan Mechanics - **PARTIAL** (with Yautja Code)
-- ✅ f) Resource Constraints - **PARTIAL** (stamina implemented, need environmental hazards, this was added quite early)
+- ✅ e) Clan Mechanics 
+- ✅ f) Resource Constraints
 - ⏳ g) Simulation Dynamics - **IN PROGRESS** (not really, need more smart behaviour but the basic loop works)
 
 ### Next Steps (Phase 4)

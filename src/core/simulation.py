@@ -374,6 +374,32 @@ class Simulation:
                     self._remove_dead_agent(agent)
                 
                 break  
+
+    def weather_update(self):
+        if self.turn % 10 == 0:
+            self.current_weather = self.grid.weather_system()
+            print(f"Weather changed: {self.current_weather}")
+
+        for agent in self.all_agents:
+            if not agent.alive:
+                continue
+            if isinstance(agent, Predator):
+                if self.current_weather == "hot":
+                    agent.useStamina(2)
+                    if agent.stamina < 20:
+                        print(f"{agent.name} is struggling in the heat, stamina reduced to {agent.stamina}. They must rest")
+                        agent.rest(10)
+                if self.current_weather == "cold":
+                    agent.useStamina(1) # need to update this
+
+                elif self.current_weather == "thunder_storm":
+                #STRIKE BY LIGHTNING
+                    if random.random() < 0.15: 
+                        damage = random.randint(5, 10)
+                        agent.take_damage(damage)
+                        print(f" {agent.name} was struck by lightning for {damage} damage!")   
+
+
     def _remove_dead_agent(self, agent):
         # helper method to remove dead agents from simulation
         self.grid.remove_agent(agent)
@@ -426,6 +452,9 @@ class Simulation:
             
             # Update all agents
             self._update_agents()
+
+
+            self.weather_update()
             
             # Display periodically
             if display_every > 0 and turn % display_every == 0:
@@ -453,7 +482,7 @@ class Simulation:
         alive_synthetics = len([s for s in self.synthetics if s.alive])
         
         print(f"\n📊 Statistics:")
-        print(f"  Turn: {self.turn}")
+        print(f"  Turn: {self.turn}, Weather is {self.current_weather}")
         print(f"  Alive - Predators: {alive_predators}, Monsters: {alive_monsters}, Synthetics: {alive_synthetics}")
         print(f"  Combats: {self.stats['combats']}, Kills: {self.stats['kills']}, Deaths: {self.stats['deaths']}")
         print(f"  Traps: {len([t for t in self.traps if not t.is_triggered])}  /  {len(self.traps)} active")
