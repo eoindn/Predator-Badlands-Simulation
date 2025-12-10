@@ -1,5 +1,5 @@
 from entities.agent import Agent
-
+from entities.synthetics import Synthetic
 
 class Predator(Agent):
     
@@ -212,6 +212,29 @@ class Predator(Agent):
         return scan_results
         
         # utilise thias scan to help dek find prey or avoid danger
+
+
+    def carry_synthetic(self, synthetic:Synthetic):
+        # help damaged synthetics
+        if not synthetic.isDamaged:
+            return False
+        
+        if self.loadCarrying > 50:
+            print(f"{self.name} is too encumbered to carry {synthetic.name}.")
+            return False
+        
+        self.loadCarrying += 50
+        print(f"{self.name} is carrying {synthetic.name} for repairs.")
+        return True
+    
+    def drop_synthetic(self):
+        
+        if self.loadCarrying > 0:
+            self.loadCarrying = 0
+            print(f"{self.name} puts down the synthetic")
+            return True
+        return False
+
 
     
 

@@ -153,6 +153,13 @@ class Simulation:
                 print(f"{agent.name} out of stamina, resting...")
                 return False
         
+        if success and isinstance(agent, Predator):
+            stamina_cost = 5
+            if agent.loadCarrying > 10:
+                stamina_cost = 10
+                print(f"{agent.name} is carrying a load, increased stamina cost!")
+            
+        
         # Predators hunt boss monsters
         if isinstance(agent, Predator):
             for monster in self.monsters:
@@ -305,6 +312,20 @@ class Simulation:
                 moved = self._move_agent_smart(agent)
                 if moved:  
                     self._check_traps(agent)
+
+
+            # Dek can pick up thia if shes fdamged 
+            if isinstance(agent, Predator) and agent.isDek:
+                if agent.carry_synthetic is None:
+                    for syntehtic in self.synthetics and syntehtic.is_alive:
+                        if syntehtic.isThia and syntehtic.isDamaged:
+
+                            #check is its close enough
+                            distance = abs(agent.x - syntehtic.x) + abs(agent.y - syntehtic.y) 
+                            if distance <= 1:
+                                agent.pick_up_synthetic(syntehtic)
+                                print(f" {agent.name} picked up {syntehtic.name}!")
+                                break
                 
             
             # Check for combat
