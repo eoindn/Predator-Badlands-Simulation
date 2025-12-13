@@ -160,19 +160,19 @@ class Simulation:
                 print(f"{agent.name} is carrying a load, increased stamina cost!")
             
         
-        # Predators hunt boss monsters
+        
         if isinstance(agent, Predator):
             for monster in self.monsters:
-                if monster.alive and monster.is_boss:  # Fixed: is_alive → alive
+                if monster.alive and monster.is_boss: 
                     target = (monster.x, monster.y)
                     break
         
-        # Monsters hunt predators
+        #onster hunt predators
         if isinstance(agent, Monster):
             closest_predator = None
             closest_dist = float('inf')
             for pred in self.predators:
-                if pred.alive:  # Fixed: is_alive → alive
+                if pred.alive:  
                     dist = MovementSystem.manattan_distance((agent.x, agent.y), (pred.x, pred.y))  # Fixed typo
                     if dist < closest_dist:
                         closest_dist = dist
@@ -180,14 +180,14 @@ class Simulation:
             if closest_predator:
                 target = (closest_predator.x, closest_predator.y)
         
-        # If we have a target, move toward it
+    
         if target:
             success = MovementSystem.move_towards_target(agent, target, self.grid)  # Fixed typo
             if success and isinstance(agent, Predator):
-                agent.useStamina(5)  # Fixed: 100 → 5
+                agent.useStamina(5)  
             return success
         
-        # Fallback: random movement if no target
+        #fa;ilback to random movement
         return self._move_agent_random(agent)
         
     def _move_agent_random(self, agent: Agent):
@@ -195,7 +195,7 @@ class Simulation:
         if not agent.alive:
             return False
         
-        # Random direction
+        
         dx = random.choice([-1, 0, 1])
         dy = random.choice([-1, 0, 1])
         
@@ -211,7 +211,7 @@ class Simulation:
 
        
         
-        # Check adjacent cells
+     
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
                 if dx == 0 and dy == 0:
@@ -229,13 +229,12 @@ class Simulation:
                 if target is None or not target.alive:
                     continue
                 
-                # Determine if they're enemies
+                #see if they're enemies
                 if isinstance(agent, Predator) and isinstance(target, Monster):
                     self._resolve_combat(agent, target)
                 elif isinstance(agent, Monster) and isinstance(target, Predator):
                     self._resolve_combat(target, agent)
                 elif isinstance(agent, Predator) and isinstance(target, Synthetic):
-                    # Predators might attack synthetics
                     if random.random() < 0.3:  # 30% chance
                         self._resolve_combat(agent, target)
     
@@ -263,6 +262,7 @@ class Simulation:
             damage = attacker.damage
         elif isinstance(attacker, Predator):
             damage = random.randint(20, 40)
+            boost_damage = damage + attacker.weapon_damage_buff
         else:
             damage = random.randint(10, 20)
         
@@ -363,6 +363,10 @@ class Simulation:
                     if agent.alive and random.random() < 0.1:
                         agent.take_damage(5)
 
+        if moved:
+            self._check_resources(agent)
+            self._check_traps(agent)
+
 
 
     def _check_traps(self, agent):
@@ -431,6 +435,30 @@ class Simulation:
             self.monsters.remove(agent)
         elif isinstance(agent, Synthetic) and agent in self.synthetics:
             self.synthetics.remove(agent)
+
+
+    def _check_resources(self,agent):
+
+        # chekcs if an agents position is on a resource and colelcts it
+
+        if not isinstance(agent, Predator):
+            return False
+        
+        for dx in [-1, 0, 1]:
+            for dy in [-1,0,1]:
+                check_x = agent.x + dx
+                check_y = agent.y + dy
+                resource_cell = self.grid.get_cell(check_x, check_y)
+
+
+                if isinstance(cell, Resource) and not cell.collected:
+                    if agent.collect_resource(cell):
+                        self.grid.remove_agent(cell)
+
+                    return
+                
+        
+
 
     
     def _check_win_conditions(self):
@@ -548,7 +576,7 @@ class Simulation:
 
 def main():
     
-    # Create simulation
+    # Create
     sim = Simulation(
         width=20,
         height=20,
@@ -556,11 +584,9 @@ def main():
         num_monsters=5,
         num_synthetics=2
     )
+    #test scan functionalitysim.test_scan()
     
-    # Test scan functionality
-    sim.test_scan()
-    
-    # Run simulation
+    #run simulatio
     sim.run(display_every=10, max_turns=50)
     
     print("\nSimulation complete!")

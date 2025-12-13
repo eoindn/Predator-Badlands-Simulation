@@ -1,6 +1,6 @@
 from entities.agent import Agent
 from entities.synthetics import Synthetic
-
+from core.grid import Grid
 class Predator(Agent):
     
    
@@ -19,12 +19,15 @@ class Predator(Agent):
         self.dek_relationship = 0 
         self.respect_threshhold = 50
         self.trophies = []
+        self.carrying_target = None
 
         #whats he doing and whats he done >:)
         self.kills = 0 
         self.loadCarrying = 0
         self.encumbered = False
-    
+
+        grid = Grid()
+        
 
     def challenge_dek(self, dek, grid):
         dek_position = abs(self.x - dek.x) + abs(self.y - dek.y)
@@ -155,7 +158,6 @@ class Predator(Agent):
             return "NEUTRAL"
             
     def __str__(self):
-        """Detailed string representation."""
         base = super().__str__()
         return (f"{base}\n"
                 f"  Stamina: {self.stamina}/{self.maxStamina} | "
@@ -171,6 +173,7 @@ class Predator(Agent):
         if self.name == "Father":
             messages = {
                 "EXILE": "You are no son of mine. Leave or be slain where you stand!",
+
                 "DISAPPROVED": "Prove yourself loser. You bring shame to our bloodline.",
                 "NEUTRAL": f"You must show me your strength Dek. You have {dek.kills} kills and {dek.honour} honour.",
                 "ACCEPTED": "You have earned respect g. The clan sees your worth."
@@ -178,15 +181,21 @@ class Predator(Agent):
         elif self.name == "Brother":
             messages = {
                 "EXILE": "LEAVE NOW! You bring great shame to us all",
+
                 "DISAPPROVED": f"Still a little scared loser . I have {self.kills} kills to your {dek.kills}.",
+
                 "NEUTRAL": "Perhaps you're not completely worthless bro.",
+
                 "ACCEPTED": f"You fight well Dek. But I still have more honour ({self.honour} vs {dek.honour}) we can play some valorant later."
             }
         else:  # others
             messages = {
                 "EXILE": f"{dek.name} is exiled. Do not speak to this loser man",
+
                 "DISAPPROVED": f"The loser {dek.name} must prove himself.",
+
                 "NEUTRAL": f"{dek.name} hunts with some skill. Hes still bronze in valorant though.",
+                
                 "ACCEPTED": f"{dek.name} has proven his worth to the clan."
             }
         
@@ -223,12 +232,42 @@ class Predator(Agent):
             print(f"{self.name} is too encumbered to carry {synthetic.name}.")
             return False
         
+        if self.carrying_target is not None:
+            print(f"{self.name} is already carrying {self.carrying_target.name}!")
+            return False
+        
+        Grid.remove_agent(synthetic)
+            
         self.loadCarrying += 50
         print(f"{self.name} is carrying {synthetic.name} for repairs.")
         return True
     
     def drop_synthetic(self):
-        
+        grid = Grid()
+        if grid.is_empty(self.x,self.y):
+            grid.place_agent(self.carrying_target,self.x,self.y)
+            print(f"{self.name} drops {self.carrying_target.name}")
+
+        else:
+            placed = False
+            for dx in [-1,0,1]:
+                for dy in [-1,0,1]:
+                    if dx ==0 and dy ==0:
+                        continue
+                    drop_x = self.x + dx
+                    drop_y = self.y + dy
+                    if grid.is_empty(drop_x,drop_y):
+                        grid.place_agent(self.carrying_target,drop_x,drop_y)
+                        print(f"{self.name} drops {self.carrying_target.name} at ({drop_x},{drop_y})")
+                        placed = True
+                        break
+                if placed:
+                    break
+            if not placed:
+                print(f"{self.name} could not find a place to drop {self.carrying_target.name}!")
+                return False
+
+
         if self.loadCarrying > 0:
             self.loadCarrying = 0
             print(f"{self.name} puts down the synthetic")

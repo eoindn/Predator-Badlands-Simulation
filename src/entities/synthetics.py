@@ -2,7 +2,7 @@ import sys
 from entities.agent import Agent
 from core.grid import Grid
 from entities.monster import Monster
-from entities.predator import Predator
+
 
 class Synthetic(Agent):
     

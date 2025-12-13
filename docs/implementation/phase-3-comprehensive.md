@@ -195,6 +195,12 @@ Each Predator has a killd attribute which i sincremented on a successful kill
 - Needs to be refined slightly 
 
 
+**Thia Carrying Mechansim**
+- Added Thia carrying mechanism 
+- When Thia's health is low she will be picked up by deck
+- Attempt to place Thia next to dek by looping through adjacent cells
+- Fails if no cell is found that is empty
+
 
 **Code Location:** `src/core/simulation.py` - `_check_combat()`, `_resolve_combat()`
 
