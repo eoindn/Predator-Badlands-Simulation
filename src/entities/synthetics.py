@@ -18,12 +18,15 @@ class Synthetic(Agent):
         self.isDamaged = False
 
     def judge_damage(self):
+        """Check if synthetic is damaged (needs repair)."""
         if self.isThia:
             if self.health < 50:
+                self.isDamaged = True
+                return True
+            else:
                 self.isDamaged = False
-                print("Thia is damaged and must be carried!")
                 return False
-        else: return None
+        return None
 
 
     def scan_area(self, grid: Grid, scan_range=3):

@@ -12,13 +12,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import random
 
 from typing import List, Dict, Optional
-from grid import Grid
+from core.grid import Grid
 from entities.agent import Agent
 from entities.predator import Predator
 from entities.monster import Monster
 from entities.synthetics import Synthetic
 from systems.movement import MovementSystem
 from entities.trap import Trap
+from entities.resource import Resource
 from systems.ClanCode import ClanCode
 
 
@@ -36,21 +37,28 @@ class Simulation:
         self.monsters: List[Monster] = []
         self.synthetics: List[Synthetic] = []
         self.traps: List[Trap] = []
+        self.resources: List[Resource] = []
         self.all_agents: List[Agent] = []
         self.current_weather = "Clear"
         
-        # Simulation state
+        #simulation state
         self.turn = 0
         self.max_turns = 100
         self.running = True
         
-        # Statistics
+        # Stat
         self.stats = {
             'turns': 0,
             'deaths': 0,
             'kills': 0,
-            'combats': 0
+            'combats': 0,
+            'resources_collected': 0
         }
+        # Dialogue spam control
+        self.last_combat_message_turn = -1
+        self.combat_message_cooldown = 3  # Only print combat messages every 3 turns
+        self.last_challenge_turn = {}  # Track last challenge turn per predator
+        self.challenge_cooldown = 10  # Only challenge every 10 turns
         
         # Initialise entities
         self._spawn_entities(num_predators, num_monsters, num_synthetics)
@@ -122,6 +130,17 @@ class Simulation:
         self.all_agents.append(thia)
         print(f"  Spawned Thia at ({x}, {y})")
         
+        # Spawn resources
+        num_resources = random.randint(5, 8)
+        resource_types = ["repair_kit", "stamina_boost", "med_kit", "sword_of_despair_and_destruction"]
+        for i in range(num_resources):
+            x, y = self._find_empty_position()
+            resource_type = random.choice(resource_types)
+            resource = Resource(x, y, resource_type=resource_type)
+            self.grid.place_agent(resource, x, y)
+            self.resources.append(resource)
+            print(f"  Spawned {resource.name} at ({x}, {y})")
+        
         print(f"\nTotal entities spawned: {len(self.all_agents)}")
         
     def _find_empty_position(self):
@@ -153,14 +172,6 @@ class Simulation:
                 print(f"{agent.name} out of stamina, resting...")
                 return False
         
-        if success and isinstance(agent, Predator):
-            stamina_cost = 5
-            if agent.loadCarrying > 10:
-                stamina_cost = 10
-                print(f"{agent.name} is carrying a load, increased stamina cost!")
-            
-        
-        
         if isinstance(agent, Predator):
             for monster in self.monsters:
                 if monster.alive and monster.is_boss: 
@@ -184,7 +195,11 @@ class Simulation:
         if target:
             success = MovementSystem.move_towards_target(agent, target, self.grid)  # Fixed typo
             if success and isinstance(agent, Predator):
-                agent.useStamina(5)  
+                stamina_cost = 5
+                if hasattr(agent, 'loadCarrying') and agent.loadCarrying > 10:
+                    stamina_cost = 10
+                    print(f"{agent.name} is carrying a load, increased stamina cost!")
+                agent.useStamina(stamina_cost)  
             return success
         
         #fa;ilback to random movement
@@ -226,7 +241,12 @@ class Simulation:
                 check_y = agent.y + dy
                 target = self.grid.get_cell(check_x, check_y)
                 
-                if target is None or not target.alive:
+                # Skip traps and other non-combat entities
+                if target is None or isinstance(target, Trap):
+                    continue
+                
+                # Check if target is alive (only for combat entities)
+                if not hasattr(target, 'alive') or not target.alive:
                     continue
                 
                 #see if they're enemies
@@ -261,14 +281,23 @@ class Simulation:
         if isinstance(attacker, Monster):
             damage = attacker.damage
         elif isinstance(attacker, Predator):
-            damage = random.randint(20, 40)
-            boost_damage = damage + attacker.weapon_damage_buff
+            base_damage = random.randint(20, 40)
+            weapon_buff = getattr(attacker, 'weapon_damage_buff', 0)
+            damage = base_damage + weapon_buff
         else:
             damage = random.randint(10, 20)
         
         # apply damage
         still_alive = defender.take_damage(damage)
-        print(f"  ⚔️  {attacker.name} attacks {defender.name} for {damage} damage!")
+        
+        # Check if defender is damaged (for synthetics)
+        if isinstance(defender, Synthetic):
+            defender.judge_damage()
+        
+        # Only print combat messages occasionally to reduce spam
+        if self.turn - self.last_combat_message_turn >= self.combat_message_cooldown or not still_alive:
+            print(f"  ⚔️  {attacker.name} attacks {defender.name} for {damage} damage!")
+            self.last_combat_message_turn = self.turn
         
         if not still_alive:
             self.stats['deaths'] += 1
@@ -308,34 +337,42 @@ class Simulation:
                 continue
             
             # Move agent
+            moved = False
             if random.random() < 0.7: 
                 moved = self._move_agent_smart(agent)
                 if moved:  
                     self._check_traps(agent)
+                    self._check_resources(agent)
 
-
-            # Dek can pick up thia if shes fdamged 
+            # Dek can pick up thia if shes damaged 
             if isinstance(agent, Predator) and agent.isDek:
-                if agent.carry_synthetic is None:
-                    for syntehtic in self.synthetics and syntehtic.is_alive:
-                        if syntehtic.isThia and syntehtic.isDamaged:
-
-                            #check is its close enough
-                            distance = abs(agent.x - syntehtic.x) + abs(agent.y - syntehtic.y) 
+                if agent.carrying_target is None:
+                    for synthetic in self.synthetics:
+                        if synthetic.alive and synthetic.isThia and synthetic.isDamaged:
+                            # Check if its close enough
+                            distance = abs(agent.x - synthetic.x) + abs(agent.y - synthetic.y) 
                             if distance <= 1:
-                                agent.pick_up_synthetic(syntehtic)
-                                print(f" {agent.name} picked up {syntehtic.name}!")
+                                if agent.carry_synthetic(synthetic):
+                                    print(f"  {agent.name} picked up {synthetic.name}!")
                                 break
                 
             
             # Check for combat
             self._check_combat(agent)
+            
+            # Check resources and repair Thia
+            if isinstance(agent, Predator):
+                self._check_resources(agent)
 
 
-            if isinstance(agent,Predator) and not agent.isDek:
-                dek = next((p for p in self.predators if p.isDek and p.alive), None)
-                if dek:
-                    agent.challenge_dek(dek, self.grid)
+            # Clan challenges - only occasionally to reduce spam
+            if isinstance(agent, Predator) and not agent.isDek:
+                last_challenge = self.last_challenge_turn.get(agent.name, -self.challenge_cooldown)
+                if self.turn - last_challenge >= self.challenge_cooldown:
+                    dek = next((p for p in self.predators if p.isDek and p.alive), None)
+                    if dek:
+                        if agent.challenge_dek(dek, self.grid):
+                            self.last_challenge_turn[agent.name] = self.turn
 
 
             
@@ -343,29 +380,29 @@ class Simulation:
             if isinstance(agent, Predator):
                 if agent.stamina < agent.maxStamina:
                     agent.rest(5)  # Regenerate stamina
-
-
-        def _apply_weather_effects(self):
             
-            #pdate weather every 10 turns
-            if self.turn % 10 == 0:
-                self.current_weather = self.grid.weather_system()
+            # Check if synthetics are damaged
+            if isinstance(agent, Synthetic) and agent.isThia:
+                agent.judge_damage()
+
+    def _apply_weather_effects(self):
+        """Apply weather effects to all agents."""
+        # Update weather every 10 turns
+        if self.turn % 10 == 0:
+            self.current_weather = self.grid.weather_system()
+            if self.turn > 0:  # Don't print on turn 0
                 print(f"\n Weather changed: {self.current_weather}")
-            
-            #effects everyone
-            if self.current_weather == "hot":
-                for pred in self.predators:
-                    if pred.alive:
-                        pred.useStamina(2) 
-            elif self.current_weather == "thunder_storm":
-                # eandom damage chance due to reduced visibility
-                for agent in self.all_agents:
-                    if agent.alive and random.random() < 0.1:
-                        agent.take_damage(5)
-
-        if moved:
-            self._check_resources(agent)
-            self._check_traps(agent)
+        
+        # Effects everyone
+        if self.current_weather == "hot":
+            for pred in self.predators:
+                if pred.alive:
+                    pred.useStamina(2) 
+        elif self.current_weather == "thunder_storm":
+            # Random damage chance due to reduced visibility
+            for agent in self.all_agents:
+                if agent.alive and random.random() < 0.1:
+                    agent.take_damage(5)
 
 
 
@@ -437,25 +474,78 @@ class Simulation:
             self.synthetics.remove(agent)
 
 
-    def _check_resources(self,agent):
-
-        # chekcs if an agents position is on a resource and colelcts it
-
+    def _check_resources(self, agent):
+        """check if an agent's position is on a resource and collects it."""
         if not isinstance(agent, Predator):
             return False
         
+        # Check current position and adjacent cells
         for dx in [-1, 0, 1]:
-            for dy in [-1,0,1]:
+            for dy in [-1, 0, 1]:
                 check_x = agent.x + dx
                 check_y = agent.y + dy
                 resource_cell = self.grid.get_cell(check_x, check_y)
 
-
-                if isinstance(cell, Resource) and not cell.collected:
-                    if agent.collect_resource(cell):
-                        self.grid.remove_agent(cell)
-
-                    return
+                # Skip if cell is empty or not a resource
+                if resource_cell is None:
+                    continue
+                
+                # Check if it's a resource
+                if isinstance(resource_cell, Resource) and not resource_cell.collected:
+                    if agent.collect_resource(resource_cell):
+                        self.grid.remove_agent(resource_cell)
+                        if resource_cell in self.resources:
+                            self.resources.remove(resource_cell)
+                        self.stats['resources_collected'] += 1
+                        print(f"  📦 {agent.name} collected {resource_cell.name}!")
+                        
+                        # Auto-use resource immediately after collection if applicable
+                        if resource_cell.resource_type == "sword_of_despair_and_destruction":
+                            # Always equip weapon immediately
+                            resource_cell.use(agent)
+                        elif resource_cell.resource_type == "med_kit":
+                            # Use med kit if health is not full
+                            if agent.health < agent.max_health:
+                                resource_cell.use(agent)
+                                # Remove from inventory since it was used
+                                if hasattr(agent, 'inventory') and resource_cell in agent.inventory:
+                                    agent.inventory.remove(resource_cell)
+                                    agent.loadCarrying = max(0, agent.loadCarrying - 10)
+                        elif resource_cell.resource_type == "stamina_boost":
+                            # Use stamina boost if stamina is not full
+                            if agent.stamina < agent.maxStamina:
+                                resource_cell.use(agent)
+                                # Remove from inventory since it was used
+                                if hasattr(agent, 'inventory') and resource_cell in agent.inventory:
+                                    agent.inventory.remove(resource_cell)
+                                    agent.loadCarrying = max(0, agent.loadCarrying - 10)
+                        # repair_kit is kept in inventory for later use on synthetics
+                        
+                        return True
+        
+        # Check if agent can repair Thia
+        if hasattr(agent, 'inventory') and agent.inventory:
+            for synthetic in self.synthetics:
+                if synthetic.isThia and synthetic.isDamaged:
+                    # Check if predator is adjacent to Thia
+                    dist = abs(agent.x - synthetic.x) + abs(agent.y - synthetic.y)
+                    if dist <= 1:
+                        if agent.repair_synthetic(synthetic):
+                            # Message is printed by Resource.use()
+                            return True
+            
+            # Auto-use med kits and stamina boosts if health/stamina is low
+            for item in agent.inventory[:]:  # Copy list to avoid modification during iteration
+                if item.resource_type == "med_kit" and agent.health < 50:
+                    if agent.use_resource(item):
+                        # Message is printed by Resource.use()
+                        return True
+                elif item.resource_type == "stamina_boost" and agent.stamina < 30:
+                    if agent.use_resource(item):
+                        # Message is printed by Resource.use()
+                        return True
+        
+        return False
                 
         
 
@@ -534,6 +624,7 @@ class Simulation:
         print(f"  Turn: {self.turn}, Weather is {self.current_weather}")
         print(f"  Alive - Predators: {alive_predators}, Monsters: {alive_monsters}, Synthetics: {alive_synthetics}")
         print(f"  Combats: {self.stats['combats']}, Kills: {self.stats['kills']}, Deaths: {self.stats['deaths']}")
+        print(f"  Resources collected: {self.stats['resources_collected']}, Remaining: {len(self.resources)}")
         print(f"  Traps: {len([t for t in self.traps if not t.is_triggered])}  /  {len(self.traps)} active")
         
         # Show predator honor

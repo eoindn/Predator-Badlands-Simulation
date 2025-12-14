@@ -274,6 +274,64 @@ class Predator(Agent):
             return True
         return False
 
+    def collect_resource(self, resource):
+        """Collect a resource from the ground."""
+        if resource.collected:
+            return False
+        
+        # Check if we can carry it (only if not already encumbered)
+        if self.loadCarrying > 80:
+            return False
+        
+        resource.collected = True
+        self.loadCarrying += 10  # Resources add some weight
+        if not hasattr(self, 'inventory'):
+            self.inventory = []
+        self.inventory.append(resource)
+        return True
+    
+    def use_resource(self, resource):
+        """Use a collected resource."""
+        if not hasattr(self, 'inventory') or resource not in self.inventory:
+            return False
+        
+        # Use the resource's use() method
+        success = resource.use(self)
+        
+        # Remove from inventory if successfully used
+        if success:
+            self.inventory.remove(resource)
+            if self.loadCarrying > 0:
+                self.loadCarrying = max(0, self.loadCarrying - 10)
+        
+        return success
+    
+    def repair_synthetic(self, synthetic):
+        """Use a repair kit to repair a synthetic."""
+        if not hasattr(self, 'inventory'):
+            return False
+        
+        # Find a repair kit
+        repair_kit = None
+        for item in self.inventory:
+            if hasattr(item, 'resource_type') and item.resource_type == "repair_kit":
+                repair_kit = item
+                break
+        
+        if not repair_kit:
+            return False
+        
+        # Use the repair kit's use() method on the synthetic
+        success = repair_kit.use(synthetic)
+        
+        # Remove from inventory if successfully used
+        if success:
+            self.inventory.remove(repair_kit)
+            if self.loadCarrying > 0:
+                self.loadCarrying = max(0, self.loadCarrying - 10)
+        
+        return success
+
 
     
 
