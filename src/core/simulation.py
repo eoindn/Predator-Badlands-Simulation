@@ -1,6 +1,6 @@
 """
 Predator: Badlands Simulation
-Main simulation engine that orchestrates the multi-agent system.
+Main simulation engine that orchestrates the multi agent system.
 """
 
 
@@ -21,6 +21,7 @@ from systems.movement import MovementSystem
 from entities.trap import Trap
 from entities.resource import Resource
 from systems.ClanCode import ClanCode
+from ai.reinforcement import Qlearning
 
 
 class Simulation:
@@ -546,8 +547,18 @@ class Simulation:
                         return True
         
         return False
-                
-        
+
+    def _dek_q_learning_actions(self, dek):
+        """
+        DEK Q LEARNING ACTIONS
+        return true if an action is taken, false otherwise
+        """
+        if not hasattr(dek, 'q_learning'):
+            return False
+
+        current_state = dek.q_table.get_state(dek, self.grid)
+
+        action = dek.q_learning.choose_action(current_state)
 
 
     

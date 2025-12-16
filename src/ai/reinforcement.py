@@ -91,4 +91,112 @@ class Qlearning:
     def choose_action(self, state):
 
         """
+        decides what action to take
+
+        - sometimes explores and tries random things
+        - sometimes exploits and uses what it knows to make the best choice
+
         """
+
+        # checks ifstate is in memory
+        if state not in self.q_table:
+            self.q_table[state] = {action: 0.0 for action in self.actions}
+
+
+        # Exploration : tries soemthing random 20 perecetn of the time
+        if random.random() < self.eplison:
+            action = random.choice(self.actions)
+            return action
+        
+
+
+        best_action = max(self.q_table[state], key=self.q_table[state].get)
+
+        return best_action
+    
+
+
+    def update(self, state, action, reward, next_state):
+        """
+        Core learning process for Q-learning
+
+        Q(state, action) = old value + learning rate * (reward + discount * best_future - old value)
+
+        """
+
+
+        if state not in self.q_table:
+            self.q_table[state] = {action: 0.0 for action in self.actions}
+
+        if next_state not in self.q_table:
+            self.q_table[next_state] = {action: 0.0 for action in self.actions}
+
+        # check what we think this action was worth
+        current_q = self.q_table[state][action]
+
+        max_next_q = max(self.q_table[next_state].values())
+
+        # update knowledge
+        # reward is the immediate payoff dek got
+        # max_next_q = best possible future play off
+
+        new_q = current_q + self.learning_rate * (reward + self.discount * max_next_q - current_q)
+
+
+
+    def get_reward(self, predator, action_result):
+        """
+        Score an outcome which says: did this action work out well?
+        
+        Positive rewards = good outcomes
+        Negative rewards = bad outcomes
+        """
+        # huge w
+        if action_result == 'killed_boss':
+            return 100  # Huge reward!
+        elif action_result == 'killed_monster':
+            return 20
+        elif action_result == 'gained_honour':
+            return 10
+        elif action_result == 'collected_resource':
+            return 5
+        elif action_result == 'healed':
+            return 3
+        
+        # mid w
+        elif action_result == 'moved':
+            return 0
+        
+        # l's
+        elif action_result == 'took_damage':
+            return -10
+        elif action_result == 'lost_honour':
+            return -15
+        elif action_result == 'died':
+            return -100  # cooked
+        elif action_result == 'wasted_action':
+            return -2
+        
+        return 0  
+    
+
+
+
+    def save(self, filename='q_table.pkl'):
+        with open(filename, 'wb') as f:
+            pickle.dump(self.q_table, f)
+        print(f"Saved Q table with {len(self.q_table)} states")
+    
+    def load(self, filename='q_table.pkl'):
+        try:
+            with open(filename, 'rb') as f:
+                self.q_table = pickle.load(f)
+            print(f"Loaded Q table with {len(self.q_table)} states")
+            return True
+        except FileNotFoundError:
+            print("No saved Q table found , starting fresh")
+            return False
+        
+
+
+        efpvojpefjnve3jfnvlkwejfnv
