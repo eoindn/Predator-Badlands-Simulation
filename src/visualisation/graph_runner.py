@@ -8,8 +8,8 @@ import numpy as np
 from datetime import datetime
 from collections import defaultdict
 
-class ExperimentRunner:
-    # Runner class for doing multiple sim runs and collecting stats
+class GprahRunner:
+    # graph for doing multiple sim runs and collecting stats
     # TODO: maybe add config file support later?
     
     def __init__(self, num_runs=20):
@@ -96,7 +96,7 @@ class ExperimentRunner:
             }
             
             run_results.append(result)
-            print("✓")
+            print("good run")
         
         self.results.extend(run_results)
         
@@ -109,7 +109,7 @@ class ExperimentRunner:
     
     def generate_statistics(self):
         if not self.results:
-            print("No results to analyze!")
+            print("No results to analyse!")
             return None
         
         stats_by_config = {}
@@ -305,13 +305,13 @@ class ExperimentRunner:
         plt.close()
     
     def save_results(self, filename='experiment_results.json'):
-        serializable_results = []
+        serialisable_results = []
         for r in self.results:
             sr = r.copy()
-            serializable_results.append(sr)
+            serialisable_results.append(sr)
         
         with open(filename, 'w') as f:
-            json.dump(serializable_results, f, indent=2)
+            json.dump(serialisable_results, f, indent=2)
         print(f"💾 Results saved to {filename}")
     
     def print_evaluation(self):
@@ -331,20 +331,17 @@ class ExperimentRunner:
         print(f"   - Overall survival rate: {survival_rate:.1f}%")
         print(f"   - Average honour score of {avg_honour:.1f} suggests some adaptive behavior")
         print(f"   - Avg {avg_kills:.1f} kills per run shows active threat engagement\n")
-        
         print("2. EMERGENT BEHAVIOURS:")
         print("   - Resource collection demonstrates basic strategic thinking")
         print("   - Honour system adds moral dimension to combat choices")
         print("   - Clan interactions (father/brother) create social dynamics\n")
-        
         print("3. SIMULATION LIMITATIONS:")
         print("   - Combat is pretty deterministic, not much randomness")
         print("   - Grid movement is way simpler than real movement")
         print("   - Decision making is just rule-based, not really AI")
         print("   - Weather effects are pretty basic")
         print("   - No actual learning - agents don't get better over time\n")
-        
-        print("4. ANALOGY TO REAL-WORLD ADAPTIVE INTELLIGENCE:")
+        print("4. ANALOGY TO REAL WORLD ADAPTIVE INTELLIGENCE:")
         print("   - Honour system is kinda like human ethics")
         print("   - Resource management shows planning ability")
         print("   - Trade-offs between survival and honour mirror real dilemmas")
