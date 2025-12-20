@@ -2,46 +2,31 @@ import random
 
 class Grid:
     """
-    2D grid environment representing planet Kalisk.
-    
-    Grid wraps around at edges to simulate vast terrain.
-    Each cell can contain one agent or be empty.
+    2D grid environment representing Kalisk.
+    Each cell can hold one agent or be empty,
+   
     """
-    
+
     def __init__(self, width=20, height=20):
-        """
-        Initialize empty grid.
-        
-        Args:
-            width: Grid width (default 20 per requirements)
-            height: Grid height (default 20 per requirements)
-        """
         self.width = width
         self.height = height
-        # 2D list - each cell is None (empty) to start
+        # Initialise a 2D list where each cell is initially None (empty)
         self.grid = [[None for _ in range(width)] for _ in range(height)]
-        
-    
-    def normalize_position(self, x, y):
+
+    def normalise_position(self, x, y):
         """
-        Wrap coordinates around grid edges.
-        
-        Returns:
-            tuple: (x, y) wrapped to valid grid coordinates
+        Wrap coordinates around the grid
         """
         return x % self.width, y % self.height
-    
+
     def is_valid_position(self, x, y):
         """
-        Check if position is within grid bounds.
-        
-        Returns:
-            bool: True if position is in range
+        Check if a position is within the actual grid boundaries (without wrapping).
         """
         return 0 <= x < self.width and 0 <= y < self.height
-    
+
     def display(self):
-        """Print grid with agents."""
+        """ Displays the grid, obviosusly """
         print("\n" + "=" * (self.width * 2 + 1))
         for row in self.grid:
             line = ""
@@ -54,115 +39,97 @@ class Grid:
         print("=" * (self.width * 2 + 1) + "\n")
 
     def is_empty(self, x, y):
-        
-        x, y = self.normalize_position(x, y)
+        x, y = self.normalise_position(x, y)
         return self.grid[y][x] is None
 
     def get_cell(self, x, y):
         
-        x, y = self.normalize_position(x, y)
+        x, y = self.normalise_position(x, y)
         return self.grid[y][x]
 
     def place_agent(self, agent, x, y):
-        
-        x, y = self.normalize_position(x, y)
-        
+        """
+        Attempt to place an agent at a normalised position.
+        Returns False if the spot is occupied.
+        """
+        x, y = self.normalise_position(x, y)
+
         if not self.is_empty(x, y):
             return False
-        
+
         self.grid[y][x] = agent
+        # Update agent's internal position tracking
         agent.x = x
         agent.y = y
         return True
 
     def remove_agent(self, agent):
-       
-        if 0 <= agent.y < self.height and 0 <= agent.x < self.width:
+        """
+        Remove an agent from its current position on the grid.
+        This method relies on the agent's stored position being correct.
+        """
+        # A quick bounds check before attempting removal
+        if self.is_valid_position(agent.x, agent.y):
             self.grid[agent.y][agent.x] = None
 
-    def get_position(self):
-        return (self.x, self.y)
 
 
     def weather_system(self):
-        weather = {
-                1:"hot",
-                2:"cold",
-                3:"rainy",
-                4:"thunder_storm"}
-
-        
-        keys = list(weather.keys())
-
-        random_key = random.choice(keys)
-
-        random_weather_value = weather[random_key]
-
-        return random_weather_value
-            
-
-    
-
-    
+        """
+        Returns a random weather string.
+        """
+        weather_options = {
+            1: "hot",
+            2: "cold",
+            3: "rainy",
+            4: "thunder_storm"
+        }
+        return random.choice(list(weather_options.values()))
 
     def move_agent(self, agent, new_x, new_y):
-        """
-        Move an agent to a new position.
-        
-        Args:
-            agent: Agent to move
-            new_x, new_y: Destination coordinates
-            
-        Returns:
-            bool: True if moved successfully, False if destination occupied
-        """
-        new_x, new_y = self.normalize_position(new_x, new_y)
-        
-        #
+        new_x, new_y = self.normalise_position(new_x, new_y)
+
+        #see if the new spot is available
         if not self.is_empty(new_x, new_y):
             return False
-        
-        # cear old position
+
+        # Clear the agent old position
         self.grid[agent.y][agent.x] = None
-        
-        #new position
+
+        #place the agent in the new position and update its coordinates
         self.grid[new_y][new_x] = agent
         agent.x = new_x
         agent.y = new_y
-        
+
         return True
 
-
 if __name__ == "__main__":
-    print("Testing Grid class...")
-    
-   
-    grid = Grid(10, 10)  # Smaller for testing
-    print(f"Created {grid.width}x{grid.height} grid")
-    
-    
-    print("\nEmpty grid:")
-    grid.display()
-    
-    # wrapping
-    print("Testing position wrapping:")
-    test_cases = [
-        (0, 0, "Normal position"),
-        (10, 5, "Right edge wrap"),
-        (-1, 5, "Left edge wrap"),
-        (5, 10, "Bottom edge wrap"),
-        (5, -1, "Top edge wrap"),
-        (-2, -3, "Both negative"),
-    ]
-    
-    for x, y, description in test_cases:
-        norm_x, norm_y = grid.normalize_position(x, y)
-        print(f"  {description:20s}: ({x:3d}, {y:3d}) -> ({norm_x:2d}, {norm_y:2d})")
-    
+    print("Initiating Grid class demonstration...")
 
-    print("\nTesting position validation:")
-    print(f"  (5, 5) valid? {grid.is_valid_position(5, 5)}")    # True
-    print(f"  (10, 5) valid? {grid.is_valid_position(10, 5)}")  # False (out of bounds)
-    print(f"  (-1, 5) valid? {grid.is_valid_position(-1, 5)}")  # False
-    
-    print("\nGrid tests complete!")
+    grid = Grid(10, 10)  #samller grid for testing
+    print(f"Created a new {grid.width}x{grid.height} grid instance.")
+
+    print("\nDisplaying the initial empty grid:")
+    grid.display()
+        # Testing the wrapping logic
+    # print("Verifying position wrapping using normalise_position():")
+    # test_cases = [
+    #     (0, 0, "Normal position"),
+    #     (10, 5, "Right edge wrap"),
+    #     (-1, 5, "Left edge wrap"),
+    #     (5, 10, "Bottom edge wrap"),
+    #     (5, -1, "Top edge wrap"),
+    #     (-2, -3, "Both negative"),
+    # ]
+
+    # for x, y, description in test_cases:
+    #     norm_x, norm_y = grid.normalise_position(x, y)
+    #     print(f"  {description:20s}: ({x:3d}, {y:3d}) -> ({norm_x:2d}, {norm_y:2d})")
+
+    # Testing the validation logic
+    # print("\nVerifying position validity within bounds using is_valid_position():")
+    # print(f"  (5, 5) valid? {grid.is_valid_position(5, 5)}")    # Expected: True
+    # print(f"  (10, 5) valid? {grid.is_valid_position(10, 5)}")  # Expected: False (out of bounds)
+    # print(f"  (-1, 5) valid? {grid.is_valid_position(-1, 5)}")  # Expected: False
+
+    # print("\nGrid class tests concluded successfully.")

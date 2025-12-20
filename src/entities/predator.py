@@ -25,6 +25,18 @@ class Predator(Agent):
         self.kills = 0 
         self.loadCarrying = 0
         self.encumbered = False
+        self.carrying_target = None
+        self.weapon_damage_buff = 0
+        self.inventory = []
+        self.max_inventory = 3
+
+
+        if isDek:
+            from ai.reinforcement import Qlearning
+            self.q_learner = Qlearning()
+            self.current_state = None
+            self.last_action = None
+            print(f"{name} initialized with Q-learning AI.")
 
         grid = Grid()
         

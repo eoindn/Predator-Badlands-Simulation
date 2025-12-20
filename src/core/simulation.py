@@ -33,7 +33,7 @@ class Simulation:
         self.width = width
         self.height = height
         
-        # Track all entities
+        #track all entities
         self.predators: List[Predator] = []
         self.monsters: List[Monster] = []
         self.synthetics: List[Synthetic] = []
@@ -41,6 +41,7 @@ class Simulation:
         self.resources: List[Resource] = []
         self.all_agents: List[Agent] = []
         self.current_weather = "Clear"
+        self.q_learning = Qlearning()
         
         #simulation state
         self.turn = 0
@@ -53,15 +54,14 @@ class Simulation:
             'deaths': 0,
             'kills': 0,
             'combats': 0,
-            'resources_collected': 0
-        }
-        # Dialogue spam control
-        self.last_combat_message_turn = -1
-        self.combat_message_cooldown = 3  # Only print combat messages every 3 turns
-        self.last_challenge_turn = {}  # Track last challenge turn per predator
-        self.challenge_cooldown = 10  # Only challenge every 10 turns
+            'resources_collected': 0}
         
-        # Initialise entities
+        self.last_combat_message_turn = -1
+        self.combat_message_cooldown = 3  # only print combat messages every 3 turns
+        self.last_challenge_turn = {}  #track last challenge turn per predator
+        self.challenge_cooldown = 10  #only challenge every 10 turns
+        
+        #initialise entities
         self._spawn_entities(num_predators, num_monsters, num_synthetics)
     
     def _spawn_entities(self, num_predators, num_monsters, num_synthetics):
@@ -71,6 +71,13 @@ class Simulation:
         
         x, y = self._find_empty_position()
         dek = Predator(x, y, name="Dek", isDek=True)
+       
+
+        dek.q_learning = self.q_learning
+        dek.current_state = None
+        dek.last_action = None
+        print(f"Dek has q learning ")
+
         self.grid.place_agent(dek, x, y)
         self.predators.append(dek)
         self.all_agents.append(dek)
@@ -324,7 +331,16 @@ class Simulation:
                 self.stats['kills'] += 1
             
             # emove from lists...
-            
+
+
+            # Q-Learning reward for Dek
+        if attacker.isDek and hasattr(attacker, 'q_learning'):
+            if attacker.current_state and attacker.last_action:
+                action_result = 'killed_boss' if (isinstance(defender, Monster) and defender.is_boss) else 'killed_monster'
+                next_state = attacker.q_learning.get_state(attacker, self)
+                reward = attacker.q_learning.get_reward(attacker, action_result)
+                attacker.q_learning.update(attacker.current_state, attacker.last_action, reward, next_state)
+                
 
 
     
@@ -336,14 +352,24 @@ class Simulation:
         for agent in self.all_agents[:]:  # Copy list to avoid modification issues
             if not agent.alive:
                 continue
-            
             # Move agent
             moved = False
-            if random.random() < 0.7: 
-                moved = self._move_agent_smart(agent)
-                if moved:  
+            if isinstance(agent, Predator) and agent.isDek:
+                print(f"[debug] Dek's turn hasattr q_learning: {hasattr(agent, 'q_learning')}")
+
+            # Use Q-learning for Dek
+            if isinstance(agent, Predator) and agent.isDek and hasattr(agent, 'q_learning'):
+                moved = self._dek_q_learning_actions(agent)
+                if moved:
                     self._check_traps(agent)
                     self._check_resources(agent)
+            elif random.random() < 0.7:
+                moved = self._move_agent_smart(agent)
+                if moved:
+                    self._check_traps(agent)
+                    self._check_resources(agent)
+
+
 
             # Dek can pick up thia if shes damaged 
             if isinstance(agent, Predator) and agent.isDek:
@@ -366,7 +392,7 @@ class Simulation:
                 self._check_resources(agent)
 
 
-            # Clan challenges - only occasionally to reduce spam
+            # occasionalyl challeng eto reduce spam 
             if isinstance(agent, Predator) and not agent.isDek:
                 last_challenge = self.last_challenge_turn.get(agent.name, -self.challenge_cooldown)
                 if self.turn - last_challenge >= self.challenge_cooldown:
@@ -415,25 +441,18 @@ class Simulation:
       
         for trap in self.traps[:]: 
             if trap.x == agent.x and trap.y == agent.y and not trap.is_triggered:
-                print(f"  💥 {agent.name} stepped on {trap.name}!")
+                print(f"💥{agent.name} stepped on {trap.name}!")
                 
                 damage = trap.damage()
                 still_alive = agent.take_damage(damage)
                 trap.is_triggered = True
-
-
-
-
-                
-                print(f"     Trap deals {damage} damage! {agent.name} HP: {agent.health}/{agent.max_health}")
-                
+                print(f"Trap deals {damage} damage! {agent.name} HP: {agent.health}/{agent.max_health}")
                 # preds loose honor for triggering traps
                 if isinstance(agent, Predator):
                     agent.lose_honour(5)
-                    print(f"     {agent.name} loses 5 honour for carelessness!")
-                
+                    print(f"{agent.name} loses 5 honour for carelessness!")
                 if not still_alive:
-                    print(f"  ☠️  {agent.name} was killed by the trap!")
+                    print(f" {agent.name} was killed by the trap!")
                     self._remove_dead_agent(agent)
                 
                 break  
@@ -453,7 +472,7 @@ class Simulation:
                         print(f"{agent.name} is struggling in the heat, stamina reduced to {agent.stamina}. They must rest")
                         agent.rest(10)
                 if self.current_weather == "cold":
-                    agent.useStamina(1) # need to update this
+                    agent.useStamina(1) #need to update this
 
                 elif self.current_weather == "thunder_storm":
                 #STRIKE BY LIGHTNING
@@ -464,7 +483,7 @@ class Simulation:
 
 
     def _remove_dead_agent(self, agent):
-        # helper method to remove dead agents from simulation
+        #helper method to remove dead agents from simulation
         self.grid.remove_agent(agent)
         
         if isinstance(agent, Predator) and agent in self.predators:
@@ -549,28 +568,136 @@ class Simulation:
         return False
 
     def _dek_q_learning_actions(self, dek):
-        """
-        DEK Q LEARNING ACTIONS
-        return true if an action is taken, false otherwise
-        """
         if not hasattr(dek, 'q_learning'):
             return False
-
-        current_state = dek.q_table.get_state(dek, self.grid)
-
+        current_state = dek.q_learning.get_state(dek, self)
         action = dek.q_learning.choose_action(current_state)
+        
+        if self.turn % 5 == 0:
+            print(f"🧠Dek Q-Learning: chose '{action}' in state {current_state}")
+
+        action_result = 'moved'
+
+       
+        if action == "hunt_boss":
+            closest_monster = None
+            closest_dist = float('inf')
+            for monster in self.monsters:  
+                if monster.is_boss and monster.alive: 
+                    dist = abs(monster.x - dek.x) + abs(monster.y - dek.y)
+                    if dist < closest_dist:
+                        closest_dist = dist
+                        closest_monster = monster
+            
+            if closest_monster:
+                target = (closest_monster.x, closest_monster.y)
+                if MovementSystem.move_towards_target(dek, target, self.grid):
+                    dek.useStamina(5)
+                    action_result = 'moved'
+        
+        elif action == "hunt_monster":
+            closest_monster = None
+            closest_dist = float('inf')
+            for monster in self.monsters:
+                if not monster.is_boss and monster.alive:
+                    dist = abs(monster.x - dek.x) + abs(monster.y - dek.y)
+                    if dist < closest_dist:
+                        closest_dist = dist
+                        closest_monster = monster
+            
+            if closest_monster:
+                target = (closest_monster.x, closest_monster.y)
+                if MovementSystem.move_towards_target(dek, target, self.grid):
+                    dek.useStamina(5)
+                    action_result = 'moved'
+        
+        elif action == 'rest':
+            if dek.stamina < dek.maxStamina:
+                dek.rest(20)
+                action_result = 'healed'
+            else:
+                action_result = 'wasted_action'
+        
+        elif action == 'collect_resource':
+            closest_resource = None
+            closest_dist = float('inf')
+            for resource in self.resources:
+                if not resource.collected:
+                    dist = abs(resource.x - dek.x) + abs(resource.y - dek.y)
+                    if dist < closest_dist:
+                        closest_dist = dist
+                        closest_resource = resource
+            
+            if closest_resource:
+                target = (closest_resource.x, closest_resource.y)
+                if MovementSystem.move_towards_target(dek, target, self.grid):
+                    dek.useStamina(3)
+                    action_result = 'moved'
+        
+        elif action == 'seek_thia':
+            thia = next((s for s in self.synthetics if s.isThia and s.alive), None)
+            if thia:
+                target = (thia.x, thia.y)
+                if MovementSystem.move_towards_target(dek, target, self.grid):
+                    dek.useStamina(5)
+                    action_result = 'moved'
+        
+        elif action == 'avoid_danger':
+            best_dx, best_dy = 0, 0
+            best_score = -999
+            
+            for dx in [-1, 0, 1]:
+                for dy in [-1, 0, 1]:
+                    if dx == 0 and dy == 0:
+                        continue
+                    
+                    test_x = dek.x + dx
+                    test_y = dek.y + dy
+                    
+                    monster_count = 0
+                    for monster in self.monsters:
+                        if monster.alive:
+                            dist = abs(monster.x - test_x) + abs(monster.y - test_y)
+                            if dist < 3:
+                                monster_count += 1
+                    
+                    score = -monster_count
+                    if score > best_score:
+                        best_score = score
+                        best_dx, best_dy = dx, dy
+            
+            new_x = dek.x + best_dx
+            new_y = dek.y + best_dy
+            if self.grid.move_agent(dek, new_x, new_y):
+                dek.useStamina(3)
+                action_result = 'moved'
+        
+        # Update qtable
+        next_state = dek.q_learning.get_state(dek, self)
+        reward = dek.q_learning.get_reward(dek, action_result)
+        dek.q_learning.update(current_state, action, reward, next_state)
+        
+        dek.current_state = next_state
+        dek.last_action = action
+        
+        return True
+
+
+
+
+        
 
 
     
     def _check_win_conditions(self):
         """Check if simulation should end."""
-        # Check if all monsters are dead
+
         alive_monsters = [m for m in self.monsters if m.alive]
         if len(alive_monsters) == 0:
             print("\n🎉 All monsters defeated! Predators win!")
             return True
         
-        # Check if all predators are dead
+        # seen if all predators are dead
         alive_predators = [p for p in self.predators if p.alive]
         if len(alive_predators) == 0:
             print("\n💀 All predators defeated! Monsters win!")
@@ -580,51 +707,66 @@ class Simulation:
     
     def run(self, display_every=5, max_turns=100):
        
-        print("\n" + "="*50)
+        print("\n" + "="*20)
         print("PREDATOR: BADLANDS SIMULATION")
-        print("="*50)
+        print("="*20)
         print(f"Grid: {self.width}x{self.height}")
         print(f"Max turns: {max_turns}")
-        print("="*50 + "\n")
+        print("="*20 + "\n")
         
         self.max_turns = max_turns
-        
-        # Initial display
         if display_every > 0:
             print(f"\n--- Turn 0 (Initial State) ---")
             self.grid.display()
             self._print_stats()
         
-        # Main simulation loop
+        #main simulation loop
         for turn in range(1, max_turns + 1):
             self.turn = turn
             self.stats['turns'] = turn
             
-            # Update all agents
+        
             self._update_agents()
 
 
             self.weather_update()
             
-            # Display periodically
+            #periodically display
             if display_every > 0 and turn % display_every == 0:
                 print(f"\n--- Turn {turn} ---")
                 self.grid.display()
                 self._print_stats()
             
-            # Check win conditions
+            #check win conditions
             if self._check_win_conditions():
                 break
             
-            # Check if simulation should continue
+            #check if simulation should continue
             if len(self.predators) == 0 or len(self.monsters) == 0:
                 break
+
+
+            
         
-        # Final display
+        #final display
         print(f"\n--- Final State (Turn {self.turn}) ---")
         self.grid.display()
         self._print_final_stats()
-    
+
+   
+
+        dek = next((p for p in self.predators if p.isDek), None)
+        if dek and hasattr(dek, 'q_learning'):
+            print(f"QLEARNING STATS:")
+            print(f"table size: {len(dek.q_learning.q_table)} states learned")
+            print(f" Epsilon: {dek.q_learning.epsilon}")
+            if len(dek.q_learning.q_table) > 0:
+                print(f"   Sample states explored:")
+                for i, (state, actions) in enumerate(list(dek.q_learning.q_table.items())[:3]):
+                    best_action = max(actions, key=actions.get)
+                    best_value = actions[best_action]
+                    print(f"     State {state}: Best action = {best_action} (Q={best_value:.2f})")
+        
     def _print_stats(self):
         """Print current simulation statistics."""
         alive_predators = len([p for p in self.predators if p.alive])
@@ -650,9 +792,8 @@ class Simulation:
         """Print final simulation statistics."""
         print("\n" + "="*50)
         print("FINAL STATISTICS")
-        print("="*50)
         self._print_stats()
-        print("="*50)
+        
     
     def test_scan(self):
         """Test the scanning functionality of synthetics."""
@@ -671,7 +812,7 @@ class Simulation:
                     print(f"    - {p['name']} at {p['position']} (distance: {p['distance']})")
                 
                 if results['boss']:
-                    print(f"  ⚠️  BOSS DETECTED: {results['boss']['name']} at {results['boss']['position']}!")
+                    print(f"BOSS SEEN: {results['boss']['name']} at {results['boss']['position']}!")
                 
                 break
 
@@ -690,6 +831,8 @@ def main():
     
     #run simulatio
     sim.run(display_every=10, max_turns=50)
+
+    
     
     print("\nSimulation complete!")
 

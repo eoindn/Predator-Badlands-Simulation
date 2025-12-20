@@ -3,22 +3,24 @@
 ### Overview
 **Session Duration:** Ongoing
 
-This phase implements Q learning reinforcement learning for Dek to enable adaptive decision-making that improves over time through experience.
+This phase implements Q-learning reinforcement learning for Dek to enable adaptive decision-making that improves over time through experience.
 
 ---
 
 ## Design Decisions Log - Reinforcement Learning Implementation
 
 ### Decision: Q-Learning Algorithm Choice
-**Date:**  December 2026
-- Implemented Q earning algorithm for Dek
+**Date:** December 2026
+**What:** Implemented Q-learning algorithm for Dek's decision-making
+**Why:**
 - Requirement h calls for adaptive AI that learns from experience
-- Q learning is well suited for discrete spaces like our grid based simulation
-- Allows Dek to improve strategies over muktiple simulation runs
+- Q-learning is well-suited for discrete state/action spaces like our grid-based simulation
+- Allows Dek to improve strategies over multiple simulation runs
 - Balance between exploration and exploitation
 
 **Implementation:**
-- Qtable stores state action value pairs
+- Q-table stores state-action value pairs
+- Epsilon-greedy action selection for exploration/exploitation balance
 - Learning rate (alpha) controls how quickly knowledge updates
 - Discount factor (gamma) determines importance of future rewards
 
@@ -30,17 +32,17 @@ This phase implements Q learning reinforcement learning for Dek to enable adapti
 **Date:** December 2026
 **What:** State represented as tuple of discrete categories
 **Why:**
-- Discrete states work better with Q learning than continuous values
+- Discrete states work better with Q-learning than continuous values
 - Reduces state space size (prevents Q-table explosion)
 - Categories capture essential game information
 
 **State Components:**
-- Health state: 'high' >65, 'medium' 30-65, 'low' <30
-- Stamina state: 'high' >65, 'low' ≤65
-- Honour state: 'high' >50, 'medium' 20-50,'low' <20
-- Threat level: 'high' ≥3 nearby, 'medium' 2 'low' 0-1
+- Health state: 'high' (>65), 'medium' (30-65), 'low' (<30)
+- Stamina state: 'high' (>65), 'low' (≤65)
+- Honour state: 'high' (>50), 'medium' (20-50), 'low' (<20)
+- Threat level: 'high' (≥3 nearby), 'medium' (2), 'low' (0-1)
 
-**Trade-off:** Less granxular than continuous values, but enables learning with reasonable table size
+**Trade-off:** Less granular than continuous values, but enables learning with reasonable table size
 
 ---
 
@@ -64,10 +66,10 @@ This phase implements Q learning reinforcement learning for Dek to enable adapti
 
 ### Decision: Reward Structure
 **Date:** December 2026
-**What:** Reward system that encourages positsive outcomes
+**What:** Reward system that encourages positive outcomes
 
 **Positive Rewards:**
-- Killed boss: +100 
+- Killed boss: +100 (major achievement)
 - Killed monster: +20
 - Gained honour: +10
 - Collected resource: +5
@@ -104,21 +106,21 @@ This phase implements Q learning reinforcement learning for Dek to enable adapti
 ## Implementation Status
 
 **Completed:**
-- Qlearning class structure
-- State representation system
-- Action selection (epsilon-greedy)
-- Qvalue update mechanism
-- Reward function
-- Qtable persistence
+- ✅ Q-learning class structure
+- ✅ State representation system
+- ✅ Action selection (epsilon-greedy)
+- ✅ Q-value update mechanism
+- ✅ Reward function
+- ✅ Q-table persistence
 
 **In Progress:**
-- Integration with simulation loop
-- Reward tracking during simulation
-- State-action-reward-next_state sequence collection
-- Epsilon decay implementation
+- ⏳ Integration with simulation loop
+- ⏳ Reward tracking during simulation
+- ⏳ State-action-reward-next_state sequence collection
+- ⏳ Epsilon decay implementation
 
 **Future Work:**
-- State space refinement based on results?
+- State space refinement based on results
 - Reward function tuning
 - Performance evaluation vs rule-based system
 - Multi-agent coordination with Thia

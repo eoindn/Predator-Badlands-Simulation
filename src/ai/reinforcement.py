@@ -23,13 +23,13 @@ class Qlearning:
     # Helps the agent explore or exploit
     # Youd typically decay this over time
 
-    def __init__(self, learning_rate = 0.1, discount = 0.95, eplison = 1): # these r standard values
+    def __init__(self, learning_rate = 0.1, discount = 0.95, epsilon = 1): # these r standard values
         
 
         self.q_table = {} # This is like the memory -> will store what dek learns
         self.learning_rate = learning_rate
         self.discount = discount
-        self.eplison = eplison
+        self.epsilon = epsilon
 
 
         # stores all actions dek can take
@@ -104,7 +104,7 @@ class Qlearning:
 
 
         # Exploration : tries soemthing random 20 perecetn of the time
-        if random.random() < self.eplison:
+        if random.random() < self.epsilon:
             action = random.choice(self.actions)
             return action
         
@@ -141,6 +141,8 @@ class Qlearning:
         # max_next_q = best possible future play off
 
         new_q = current_q + self.learning_rate * (reward + self.discount * max_next_q - current_q)
+
+        self.q_table[state][action] = new_q
 
 
 
@@ -197,5 +199,4 @@ class Qlearning:
             print("No saved Q table found , starting fresh")
             return False
         
-
 
