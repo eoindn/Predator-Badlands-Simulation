@@ -79,6 +79,9 @@ class GameVisualizer:
         cy = y * self.cell_size + self.cell_size // 2
         self
 
+        text_color = 'black' if entity_symbol is ['D', 'T', 'S', 'W'] else 'white'
+        self.canvas.create_text(cx, cy, text=entity_symbol, fill=text_color, font=('Arial', 14, 'bold'))
+
     def update_stats(self):
         self.stats_text.delete(1.0, tk.END)
 
