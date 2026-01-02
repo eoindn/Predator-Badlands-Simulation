@@ -10,7 +10,7 @@ from collections import defaultdict
 
 class GprahRunner:
     # graph for doing multiple sim runs and collecting stats
-    # TODO: maybe add config file support later?
+    # maybe add config file support later?
     
     def __init__(self, num_runs=20):
         self.num_runs = num_runs
@@ -155,19 +155,19 @@ class GprahRunner:
             }
         
      
-        print("STATISTICAL ANALYSIS")
+        print("statistical analysis results:")
         for config, stats in stats_by_config.items():
             print(f"Configuration: {config}")
-            print(f"  Total runs: {stats['total_runs']}")
-            print(f"  Dek survival rate: {stats['survival_rate']:.1f}%")
-            print(f"  Boss defeat rate: {stats['boss_defeat_rate']:.1f}%")
-            print(f"  Average survival time: {stats['avg_turns']:.1f} ± {stats['std_turns']:.1f} turns")
-            print(f"  Median survival time: {stats['median_turns']:.1f} turns")
-            print(f"  Average final honour: {stats['avg_honour']:.1f} ± {stats['std_honour']:.1f}")
-            print(f"  Maximum honour achieved: {stats['max_honour_achieved']:.1f}")
-            print(f"  Average kills: {stats['avg_kills']:.1f}")
-            print(f"  Average combats: {stats['avg_combats']:.1f}")
-            print(f"  Average resources collected: {stats['avg_resources']:.1f}")
+            print(f"Total runs: {stats['total_runs']}")
+            print(f"Dek survival rate: {stats['survival_rate']:.1f}%")
+            print(f"Boss defeat rate: {stats['boss_defeat_rate']:.1f}%")
+            print(f"Average survival time: {stats['avg_turns']:.1f} ± {stats['std_turns']:.1f} turns")
+            print(f"Median survival time: {stats['median_turns']:.1f} turns")
+            print(f"Average final honour: {stats['avg_honour']:.1f} ± {stats['std_honour']:.1f}")
+            print(f"Maximum honour achieved: {stats['max_honour_achieved']:.1f}")
+            print(f"Average kills: {stats['avg_kills']:.1f}")
+            print(f"Average combats: {stats['avg_combats']:.1f}")
+            print(f"Average resources collected: {stats['avg_resources']:.1f}")
             if stats['survived_turns']:
                 print(f"  Survived runs - avg turns: {np.mean(stats['survived_turns']):.1f}")
             if stats['died_turns']:
@@ -301,7 +301,7 @@ class GprahRunner:
         
         plt.tight_layout()
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"📊 Plots saved to {output_file}")
+        print(f"Plots saved to {output_file}")
         plt.close()
     
     def save_results(self, filename='experiment_results.json'):
@@ -315,12 +315,11 @@ class GprahRunner:
         print(f"💾 Results saved to {filename}")
     
     def print_evaluation(self):
-        print(f"\n{'='*80}")
         print("CRITICAL EVALUATION OF EMERGENT BEHAVIOURS")
-        print(f"{'='*80}\n")
+   
         
         if not self.results:
-            print("No results to evaluate!")
+            print("No results to evaluate")
             return
         
         survival_rate = sum(1 for r in self.results if r['dek_survived']) / len(self.results) * 100
@@ -331,23 +330,7 @@ class GprahRunner:
         print(f"   - Overall survival rate: {survival_rate:.1f}%")
         print(f"   - Average honour score of {avg_honour:.1f} suggests some adaptive behavior")
         print(f"   - Avg {avg_kills:.1f} kills per run shows active threat engagement\n")
-        print("2. EMERGENT BEHAVIOURS:")
-        print("   - Resource collection demonstrates basic strategic thinking")
-        print("   - Honour system adds moral dimension to combat choices")
-        print("   - Clan interactions (father/brother) create social dynamics\n")
-        print("3. SIMULATION LIMITATIONS:")
-        print("   - Combat is pretty deterministic, not much randomness")
-        print("   - Grid movement is way simpler than real movement")
-        print("   - Decision making is just rule-based, not really AI")
-        print("   - Weather effects are pretty basic")
-        print("   - No actual learning - agents don't get better over time\n")
-        print("4. ANALOGY TO REAL WORLD ADAPTIVE INTELLIGENCE:")
-        print("   - Honour system is kinda like human ethics")
-        print("   - Resource management shows planning ability")
-        print("   - Trade-offs between survival and honour mirror real dilemmas")
-        print("   - But it's missing true adaptation - no learning from mistakes")
-        print("   - Real adaptive systems would improve strategies with experience\n")
-        
+          
         
 
 if __name__ == "__main__":

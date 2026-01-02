@@ -42,6 +42,8 @@ class Simulation:
         self.all_agents: List[Agent] = []
         self.current_weather = "Clear"
         self.q_learning = Qlearning()
+        self.max_resources = 10
+        self.resource_spawn_interval = 5  # turns
         
         #simulation state
         self.turn = 0
@@ -139,7 +141,12 @@ class Simulation:
         print(f"  Spawned Thia at ({x}, {y})")
         
         # Spawn resources
-        num_resources = random.randint(5, 8)
+        if self.turn > 10:
+            num_resources = random.randint(1, 2)
+        elif self.turn > 30:
+            num_resources = random.randint(2, 4)
+        else:
+            num_resources = random.randint(4, 8)
         resource_types = ["repair_kit", "stamina_boost", "med_kit", "sword_of_despair_and_destruction"]
         for i in range(num_resources):
             x, y = self._find_empty_position()
@@ -298,7 +305,7 @@ class Simulation:
         # apply damage
         still_alive = defender.take_damage(damage)
         
-        # Check if defender is damaged (for synthetics)
+        
         if isinstance(defender, Synthetic):
             defender.judge_damage()
         
@@ -309,7 +316,7 @@ class Simulation:
         
         if not still_alive:
             self.stats['deaths'] += 1
-            print(f"  💀 {defender.name} has been defeated!")
+            print(f"{defender.name} has been defeated!")
             
       
             self.grid.remove_agent(defender)
@@ -333,7 +340,7 @@ class Simulation:
             # emove from lists...
 
 
-            # Q-Learning reward for Dek
+            # ql earning reward for Dek
         if attacker.isDek and hasattr(attacker, 'q_learning'):
             if attacker.current_state and attacker.last_action:
                 action_result = 'killed_boss' if (isinstance(defender, Monster) and defender.is_boss) else 'killed_monster'
@@ -346,18 +353,18 @@ class Simulation:
     
     def _update_agents(self):
         """Update all agents (movement, combat, etc.)."""
-        # Shuffle to randomize turn order
+      
         random.shuffle(self.all_agents)
         
-        for agent in self.all_agents[:]:  # Copy list to avoid modification issues
+        for agent in self.all_agents[:]:  # copy list avoid modification issues
             if not agent.alive:
                 continue
-            # Move agent
+          
             moved = False
             if isinstance(agent, Predator) and agent.isDek:
                 print(f"[debug] Dek's turn hasattr q_learning: {hasattr(agent, 'q_learning')}")
 
-            # Use Q-learning for Dek
+           
             if isinstance(agent, Predator) and agent.isDek and hasattr(agent, 'q_learning'):
                 moved = self._dek_q_learning_actions(agent)
                 if moved:
@@ -371,7 +378,7 @@ class Simulation:
 
 
 
-            # Dek can pick up thia if shes damaged 
+            #dek picks up thia
             if isinstance(agent, Predator) and agent.isDek:
                 if agent.carrying_target is None:
                     for synthetic in self.synthetics:
@@ -384,10 +391,10 @@ class Simulation:
                                 break
                 
             
-            # Check for combat
+            
             self._check_combat(agent)
             
-            # Check resources and repair Thia
+            
             if isinstance(agent, Predator):
                 self._check_resources(agent)
 
@@ -403,30 +410,29 @@ class Simulation:
 
 
             
-            # Update stamina for predators
+            
             if isinstance(agent, Predator):
                 if agent.stamina < agent.maxStamina:
                     agent.rest(5)  # Regenerate stamina
             
-            # Check if synthetics are damaged
+            
             if isinstance(agent, Synthetic) and agent.isThia:
                 agent.judge_damage()
 
     def _apply_weather_effects(self):
-        """Apply weather effects to all agents."""
-        # Update weather every 10 turns
+    
         if self.turn % 10 == 0:
             self.current_weather = self.grid.weather_system()
             if self.turn > 0:  # Don't print on turn 0
                 print(f"\n Weather changed: {self.current_weather}")
         
-        # Effects everyone
+        #effect shwole gird
         if self.current_weather == "hot":
             for pred in self.predators:
                 if pred.alive:
                     pred.useStamina(2) 
         elif self.current_weather == "thunder_storm":
-            # Random damage chance due to reduced visibility
+            #random damage chance due to reduced visibility
             for agent in self.all_agents:
                 if agent.alive and random.random() < 0.1:
                     agent.take_damage(5)
@@ -441,7 +447,7 @@ class Simulation:
       
         for trap in self.traps[:]: 
             if trap.x == agent.x and trap.y == agent.y and not trap.is_triggered:
-                print(f"💥{agent.name} stepped on {trap.name}!")
+                print(f"{agent.name} stepped on {trap.name}!")
                 
                 damage = trap.damage()
                 still_alive = agent.take_damage(damage)
@@ -499,18 +505,22 @@ class Simulation:
         if not isinstance(agent, Predator):
             return False
         
-        # Check current position and adjacent cells
+
+
+     
+                
+    
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
                 check_x = agent.x + dx
                 check_y = agent.y + dy
                 resource_cell = self.grid.get_cell(check_x, check_y)
 
-                # Skip if cell is empty or not a resource
+         
                 if resource_cell is None:
                     continue
                 
-                # Check if it's a resource
+               
                 if isinstance(resource_cell, Resource) and not resource_cell.collected:
                     if agent.collect_resource(resource_cell):
                         self.grid.remove_agent(resource_cell)
@@ -519,66 +529,66 @@ class Simulation:
                         self.stats['resources_collected'] += 1
                         print(f"  📦 {agent.name} collected {resource_cell.name}!")
                         
-                        # Auto-use resource immediately after collection if applicable
+                       
                         if resource_cell.resource_type == "sword_of_despair_and_destruction":
-                            # Always equip weapon immediately
+                            #equip weapon immediately
                             resource_cell.use(agent)
                         elif resource_cell.resource_type == "med_kit":
-                            # Use med kit if health is not full
+                        
                             if agent.health < agent.max_health:
                                 resource_cell.use(agent)
-                                # Remove from inventory since it was used
                                 if hasattr(agent, 'inventory') and resource_cell in agent.inventory:
                                     agent.inventory.remove(resource_cell)
                                     agent.loadCarrying = max(0, agent.loadCarrying - 10)
                         elif resource_cell.resource_type == "stamina_boost":
-                            # Use stamina boost if stamina is not full
+                            #us estamina boost if not full
                             if agent.stamina < agent.maxStamina:
                                 resource_cell.use(agent)
-                                # Remove from inventory since it was used
+                               
                                 if hasattr(agent, 'inventory') and resource_cell in agent.inventory:
                                     agent.inventory.remove(resource_cell)
                                     agent.loadCarrying = max(0, agent.loadCarrying - 10)
-                        # repair_kit is kept in inventory for later use on synthetics
+                       
                         
                         return True
         
-        # Check if agent can repair Thia
+        
         if hasattr(agent, 'inventory') and agent.inventory:
             for synthetic in self.synthetics:
                 if synthetic.isThia and synthetic.isDamaged:
-                    # Check if predator is adjacent to Thia
+                
                     dist = abs(agent.x - synthetic.x) + abs(agent.y - synthetic.y)
                     if dist <= 1:
                         if agent.repair_synthetic(synthetic):
                             # Message is printed by Resource.use()
                             return True
             
-            # Auto-use med kits and stamina boosts if health/stamina is low
-            for item in agent.inventory[:]:  # Copy list to avoid modification during iteration
+            #auro use med kits and stamina boost
+            for item in agent.inventory[:]:  #copt list ot avoid modification
                 if item.resource_type == "med_kit" and agent.health < 50:
                     if agent.use_resource(item):
-                        # Message is printed by Resource.use()
+                        
                         return True
                 elif item.resource_type == "stamina_boost" and agent.stamina < 30:
                     if agent.use_resource(item):
-                        # Message is printed by Resource.use()
                         return True
         
         return False
 
     def _dek_q_learning_actions(self, dek):
+        """Use Q-Learning to decide and execute Dek's action."""
         if not hasattr(dek, 'q_learning'):
             return False
+            
         current_state = dek.q_learning.get_state(dek, self)
         action = dek.q_learning.choose_action(current_state)
         
         if self.turn % 5 == 0:
-            print(f"🧠Dek Q-Learning: chose '{action}' in state {current_state}")
+            print(f"Dek Q-Learning: chose '{action}' in state {current_state}")
 
         action_result = 'moved'
 
-       
+    
         if action == "hunt_boss":
             closest_monster = None
             closest_dist = float('inf')
@@ -672,7 +682,7 @@ class Simulation:
                 dek.useStamina(3)
                 action_result = 'moved'
         
-        # Update qtable
+        # Update Q-table
         next_state = dek.q_learning.get_state(dek, self)
         reward = dek.q_learning.get_reward(dek, action_result)
         dek.q_learning.update(current_state, action, reward, next_state)
@@ -681,7 +691,6 @@ class Simulation:
         dek.last_action = action
         
         return True
-
 
 
 
@@ -700,7 +709,7 @@ class Simulation:
         # seen if all predators are dead
         alive_predators = [p for p in self.predators if p.alive]
         if len(alive_predators) == 0:
-            print("\n💀 All predators defeated! Monsters win!")
+            print("\nAll predators defeated! Monsters win!")
             return True
         
         return False
@@ -773,7 +782,7 @@ class Simulation:
         alive_monsters = len([m for m in self.monsters if m.alive])
         alive_synthetics = len([s for s in self.synthetics if s.alive])
         
-        print(f"\n📊 Statistics:")
+        print(f"\nStatistics:")
         print(f"  Turn: {self.turn}, Weather is {self.current_weather}")
         print(f"  Alive - Predators: {alive_predators}, Monsters: {alive_monsters}, Synthetics: {alive_synthetics}")
         print(f"  Combats: {self.stats['combats']}, Kills: {self.stats['kills']}, Deaths: {self.stats['deaths']}")
@@ -829,7 +838,7 @@ def main():
     )
     #test scan functionalitysim.test_scan()
     
-    #run simulatio
+    #run simulation
     sim.run(display_every=10, max_turns=50)
 
     

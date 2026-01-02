@@ -34,13 +34,13 @@ class Monster(Agent):
 if __name__ == "__main__":
     print("Testing Monster class...\n")
     
-    # Create regular monster
+  
     monster = Monster(5, 5, "Cave Creature")
     print("Regular Monster:")
     print(monster)
     print()
     
-    # Create boss
+  
     boss = Monster(15, 15, "Ultimate Adversary", is_boss=True)
     print("Boss Monster:")
     print(boss)

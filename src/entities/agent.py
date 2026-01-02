@@ -43,14 +43,9 @@ class Agent:
     def get_pos(self):
         return (self.x,self.y)
     
-    def __str__(self):
-        """String representation for debugging."""
-        status = "ALIVE" if self.alive else "DEAD"
-        return f"{self.name} ({self.symbol}) at ({self.x}, {self.y}) - HP: {self.health}/{self.max_health} [{status}]"
     
-    def __repr__(self):
-        """dev representation."""
-        return f"Agent('{self.name}', pos=({self.x},{self.y}), hp={self.health})"
+    
+    
     
 
    
