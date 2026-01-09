@@ -296,7 +296,7 @@ class Predator(Agent):
             return False
         
         resource.collected = True
-        self.loadCarrying += 10  # Resources add some weight
+        self.loadCarrying += 10  #resources add some weight
         if not hasattr(self, 'inventory'):
             self.inventory = []
         self.inventory.append(resource)
@@ -307,10 +307,10 @@ class Predator(Agent):
         if not hasattr(self, 'inventory') or resource not in self.inventory:
             return False
         
-        # Use the resource's use() method
+      
         success = resource.use(self)
         
-        # Remove from inventory if successfully used
+        
         if success:
             self.inventory.remove(resource)
             if self.loadCarrying > 0:
@@ -323,7 +323,7 @@ class Predator(Agent):
         if not hasattr(self, 'inventory'):
             return False
         
-        # Find a repair kit
+        #find repair kit
         repair_kit = None
         for item in self.inventory:
             if hasattr(item, 'resource_type') and item.resource_type == "repair_kit":
@@ -333,10 +333,10 @@ class Predator(Agent):
         if not repair_kit:
             return False
         
-        # Use the repair kit's use() method on the synthetic
+        
         success = repair_kit.use(synthetic)
         
-        # Remove from inventory if successfully used
+        
         if success:
             self.inventory.remove(repair_kit)
             if self.loadCarrying > 0:

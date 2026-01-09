@@ -39,10 +39,10 @@ class Synthetic(Agent):
             'thia': None
     }
         
-        # Scan in a square around Thia's position
+    
         for dx in range(-scan_range, scan_range + 1):
             for dy in range(-scan_range, scan_range + 1):
-                # Skip Thia's own position
+                #skip Thia own position
                 if dx == 0 and dy == 0:
                     continue
                 
@@ -52,7 +52,7 @@ class Synthetic(Agent):
                 cell_content = grid.get_cell(check_x, check_y)
                 
                 if cell_content is not None:
-                    # Check what type of agent it is
+                   
                     if isinstance(cell_content, Monster):
                         monster_info = {
                             'name': cell_content.name,
@@ -86,12 +86,11 @@ class Synthetic(Agent):
                         }
                         
                         if cell_content.isThia:
-                            scan_results['thia'] = synthetic_info  # ← Was 'predator_info' - wrong!
+                            scan_results['thia'] = synthetic_info 
                         else:
                             scan_results['synthetics'].append(synthetic_info)
     
-        return  scan_results# ← Must be aligned with first 'for' loop
-
+        return  scan_results
 
                     
 

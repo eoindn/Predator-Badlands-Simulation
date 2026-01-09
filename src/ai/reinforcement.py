@@ -4,6 +4,7 @@ import pickle
 class Qlearning:
     """
     q learning is an ai reingforcement learning algorithm that will help dek to learn from its environment and make better decisions over time.
+    partly for challenge h , specifies we need reinforcment learning
     """
 
 
@@ -47,14 +48,10 @@ class Qlearning:
     
 
     def get_state(self,predator,simulation):
-        """
-        - this will convert the game situation into  a simple state
         
-        - returns a simple tuple based on the situation
-
-        """
-
-
+        #this will convert the game situation into  a simple state
+        
+    
 
         health_state = 'high' if predator.health > 65 else (
             'medium' if predator.health > 30 else 'low'
@@ -83,6 +80,7 @@ class Qlearning:
         )
 
 
+
         return (health_state, stamina_state,honor_state, threat_level)
     
 
@@ -103,7 +101,7 @@ class Qlearning:
             self.q_table[state] = {action: 0.0 for action in self.actions}
 
 
-        # Exploration : tries soemthing random 20 perecetn of the time
+        # Exploration tries soemthing random 20 perecetn of the time
         if random.random() < self.epsilon:
             action = random.choice(self.actions)
             return action
@@ -117,13 +115,7 @@ class Qlearning:
 
 
     def update(self, state, action, reward, next_state):
-        """
-        Core learning process for Q-learning
-
-        Q(state, action) = old value + learning rate * (reward + discount * best_future - old value)
-
-        """
-
+        
 
         if state not in self.q_table:
             self.q_table[state] = {action: 0.0 for action in self.actions}
@@ -147,12 +139,7 @@ class Qlearning:
 
 
     def get_reward(self, predator, action_result):
-        """
-        Score an outcome which says: did this action work out well?
-        
-        Positive rewards = good outcomes
-        Negative rewards = bad outcomes
-        """
+    
         # huge w
         if action_result == 'killed_boss':
             return 100  # Huge reward!
