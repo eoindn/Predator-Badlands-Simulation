@@ -22,7 +22,8 @@ from entities.trap import Trap
 from entities.resource import Resource
 from systems.ClanCode import ClanCode
 from ai.reinforcement import Qlearning
-
+from generation.hazards import HazardGenerator
+from generation.hazards import DynamicHazards
 
 class Simulation:
     
@@ -42,6 +43,10 @@ class Simulation:
         self.all_agents: List[Agent] = []
         self.current_weather = "Clear"
         self.q_learning = Qlearning()
+
+        # procedural generation stuff
+        self.hazard_generation = HazardGenerator(width,height)
+        self.hazard_generation.generate_initial_hazards(count=3)
         
         #simulation state
         self.turn = 0
@@ -249,11 +254,11 @@ class Simulation:
                 check_y = agent.y + dy
                 target = self.grid.get_cell(check_x, check_y)
                 
-                # Skip traps and other non-combat entities
+            
                 if target is None or isinstance(target, Trap):
                     continue
                 
-                # Check if target is alive (only for combat entities)
+               
                 if not hasattr(target, 'alive') or not target.alive:
                     continue
                 
@@ -263,7 +268,7 @@ class Simulation:
                 elif isinstance(agent, Monster) and isinstance(target, Predator):
                     self._resolve_combat(target, agent)
                 elif isinstance(agent, Predator) and isinstance(target, Synthetic):
-                    if random.random() < 0.3:  # 30% chance
+                    if random.random() < 0.3: 
                         self._resolve_combat(agent, target)
     
     def _resolve_combat(self, attacker: Agent, defender: Agent):
@@ -349,15 +354,24 @@ class Simulation:
         # Shuffle to randomize turn order
         random.shuffle(self.all_agents)
         
-        for agent in self.all_agents[:]:  # Copy list to avoid modification issues
+        for agent in self.all_agents[:]: 
             if not agent.alive:
                 continue
-            # Move agent
-            moved = False
-            if isinstance(agent, Predator) and agent.isDek:
-                print(f"[debug] Dek's turn hasattr q_learning: {hasattr(agent, 'q_learning')}")
 
-            # Use Q-learning for Dek
+
+
+
+
+
+
+
+
+          
+            moved = False
+            # if isinstance(agent, Predator) and agent.isDek:
+            #     print(f"[debug] Dek's turn hasattr q_learning: {hasattr(agent, 'q_learning')}")
+
+            #dek uses q learning
             if isinstance(agent, Predator) and agent.isDek and hasattr(agent, 'q_learning'):
                 moved = self._dek_q_learning_actions(agent)
                 if moved:
@@ -371,25 +385,32 @@ class Simulation:
 
 
 
-            # Dek can pick up thia if shes damaged 
+            # can pick up thia if shes damaged not sure this works tho
             if isinstance(agent, Predator) and agent.isDek:
                 if agent.carrying_target is None:
                     for synthetic in self.synthetics:
                         if synthetic.alive and synthetic.isThia and synthetic.isDamaged:
-                            # Check if its close enough
+
+
+                            #see if its close enough
                             distance = abs(agent.x - synthetic.x) + abs(agent.y - synthetic.y) 
                             if distance <= 1:
                                 if agent.carry_synthetic(synthetic):
                                     print(f"  {agent.name} picked up {synthetic.name}!")
                                 break
                 
-            
-            # Check for combat
+
             self._check_combat(agent)
             
-            # Check resources and repair Thia
             if isinstance(agent, Predator):
                 self._check_resources(agent)
+
+
+            # u[date for new procedural hazards
+                hit, damage, hazard_type = self.hazard_generation.check_hazard_damage(agent)
+                if hit:
+                    agent.take_damage(damage)
+                    print(f"{agent.name} hit by {hazard_type} for {damage} damage!")
 
 
             # occasionalyl challeng eto reduce spam 
@@ -403,30 +424,35 @@ class Simulation:
 
 
             
-            # Update stamina for predators
+            
             if isinstance(agent, Predator):
                 if agent.stamina < agent.maxStamina:
                     agent.rest(5)  # Regenerate stamina
             
-            # Check if synthetics are damaged
+    
             if isinstance(agent, Synthetic) and agent.isThia:
                 agent.judge_damage()
 
     def _apply_weather_effects(self):
-        """Apply weather effects to all agents."""
-        # Update weather every 10 turns
+       
+       
         if self.turn % 10 == 0:
             self.current_weather = self.grid.weather_system()
             if self.turn > 0:  # Don't print on turn 0
                 print(f"\n Weather changed: {self.current_weather}")
         
-        # Effects everyone
+     
         if self.current_weather == "hot":
             for pred in self.predators:
                 if pred.alive:
                     pred.useStamina(2) 
+
+
+
+
+
         elif self.current_weather == "thunder_storm":
-            # Random damage chance due to reduced visibility
+            # randsom damage chance due to reduced visibility
             for agent in self.all_agents:
                 if agent.alive and random.random() < 0.1:
                     agent.take_damage(5)
@@ -727,6 +753,7 @@ class Simulation:
             
         
             self._update_agents()
+            self.hazard_generation.update(turn)
 
 
             self.weather_update()
@@ -773,7 +800,7 @@ class Simulation:
         alive_monsters = len([m for m in self.monsters if m.alive])
         alive_synthetics = len([s for s in self.synthetics if s.alive])
         
-        print(f"\n📊 Statistics:")
+        print(f"\nStatistics:")
         print(f"  Turn: {self.turn}, Weather is {self.current_weather}")
         print(f"  Alive - Predators: {alive_predators}, Monsters: {alive_monsters}, Synthetics: {alive_synthetics}")
         print(f"  Combats: {self.stats['combats']}, Kills: {self.stats['kills']}, Deaths: {self.stats['deaths']}")

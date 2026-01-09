@@ -40,7 +40,7 @@ class GameVisualizer:
             'P': '#00aaff',
             'M': '#ff0000',
             'X': '#ff00ff',
-            'T': '#ffff00',
+            'T': "#8a8a1c",
             'H': '#ff8800',
             'R': '#888888',
             'S': '#00ffff',

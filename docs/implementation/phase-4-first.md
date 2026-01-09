@@ -106,18 +106,14 @@ This phase implements Q-learning reinforcement learning for Dek to enable adapti
 ## Implementation Status
 
 **Completed:**
-- ✅ Q-learning class structure
-- ✅ State representation system
-- ✅ Action selection (epsilon-greedy)
-- ✅ Q-value update mechanism
-- ✅ Reward function
-- ✅ Q-table persistence
+- Qlearning class structure
+- State representation system
+- Action selection (epsilon-greedy)
+- Qvalue update mechanism
+- Reward function
+- Qtable persistence
 
-**In Progress:**
-- ⏳ Integration with simulation loop
-- ⏳ Reward tracking during simulation
-- ⏳ State-action-reward-next_state sequence collection
-- ⏳ Epsilon decay implementation
+
 
 **Future Work:**
 - State space refinement based on results
@@ -132,14 +128,6 @@ This phase implements Q-learning reinforcement learning for Dek to enable adapti
 - Gets current state from Q-table
 - Chooses action based on epsilon-greedy policy
 
-**Next Steps:**
-1. Execute chosen action in simulation
-2. Track action results for reward calculation
-3. Update Q-values after each action
-4. Save Q-table periodically
-5. Compare performance with/without learning
-
----
 
 ## Expected Outcomes
 
@@ -147,7 +135,7 @@ This phase implements Q-learning reinforcement learning for Dek to enable adapti
 - Dek should improve survival rate over multiple runs
 - Better resource management strategies
 - More effective combat decisions
-- Honour-conscious decision-making
+- Honour conscious decision-making
 
 **Evaluation Metrics:**
 - Survival rate improvement over runs
@@ -155,24 +143,17 @@ This phase implements Q-learning reinforcement learning for Dek to enable adapti
 - Boss defeat rates
 - Resource utilisation efficiency
 
----
+
 
 ## Challenges and Limitations
 
-**Current Challenges:**
+
 - State space may need refinement based on initial results
 - Reward function may need tuning
 - Exploration vs exploitation balance
 - Integration complexity with existing simulation systems
-
-**Known Limitations:**
 - Discrete state representation loses some nuance
 - Fixed reward values may not capture all strategic subtleties
 - Learning requires many simulation runs to show improvement
 - Current implementation doesn't handle Thia coordination yet
-
----
-
-**Time Spent:** Ongoing
-**Next Session Goals:** Complete integration and run initial learning experiments
 
